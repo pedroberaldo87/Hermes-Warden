@@ -211,6 +211,7 @@ No terminal, no setup guide: a tab with a button for each step.<br>Then ask for 
 - Without `--enable`, answer yes to "Enable now?", or switch the plugin on in Hermes Desktop under Capabilities → Plugins.
 - If Warden does not show up in the Desktop sidebar, open Capabilities → Plugins and turn on the Desktop switch of the Hermes Warden row.
 - If the tools or `/warden` do not show up, restart the gateway: `hermes gateway restart`.
+- After an update (`hermes plugins update hermes-warden`), restart the gateway the same way so it loads the new code. The vault locks once: unlock it again. If a tool answers `restarted`, ask again and a new dialog opens.
 - If the agent answers `no_surface`, no window can show a dialog: open Hermes Desktop or the Webapp (on macOS, a logged-in session on the Hermes host also works).
 
 **Where it runs**

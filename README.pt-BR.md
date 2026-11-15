@@ -211,6 +211,7 @@ Sem terminal e sem tutorial: uma aba com um botão para cada passo.<br>Depois é
 - Sem `--enable`, responda sim a "Enable now?", ou ligue o plugin no Hermes Desktop em Capabilities → Plugins.
 - Se o Warden não aparecer na barra lateral do Desktop, abra Capabilities → Plugins e ligue a chave Desktop da linha do Hermes Warden.
 - Se as ferramentas ou o `/warden` não aparecerem, reinicie o gateway: `hermes gateway restart`.
+- Depois de atualizar (`hermes plugins update hermes-warden`), reinicie o gateway do mesmo jeito para ele carregar o código novo. O cofre tranca uma vez: destrave de novo. Se uma ferramenta responder `restarted`, peça de novo e um diálogo novo abre.
 - Se o agente responder `no_surface`, nenhuma janela pode mostrar um diálogo: abra o Hermes Desktop ou o Webapp (no macOS, uma sessão logada no host do Hermes também serve).
 
 **Onde funciona**
