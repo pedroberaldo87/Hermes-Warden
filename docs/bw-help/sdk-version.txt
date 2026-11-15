@@ -1,0 +1,6 @@
+Usage: bw sdk-version [options]
+
+Print the SDK version.
+
+Options:
+  -h, --help  display help for command

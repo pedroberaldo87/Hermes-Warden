@@ -1,0 +1,37 @@
+Usage: bw generate [options]
+
+Generate a password/passphrase.
+
+Options:
+  -u, --uppercase          Include uppercase characters.
+  -l, --lowercase          Include lowercase characters.
+  -n, --number             Include numeric characters.
+  -s, --special            Include special characters.
+  -p, --passphrase         Generate a passphrase.
+  --length <length>        Length of the password.
+  --words <words>          Number of words.
+  --minNumber <count>      Minimum number of numeric characters.
+  --minSpecial <count>     Minimum number of special characters.
+  --separator <separator>  Word separator.
+  -c, --capitalize         Title case passphrase.
+  --includeNumber          Passphrase includes number.
+  --ambiguous              Avoid ambiguous characters.
+  -h, --help               display help for command
+
+  Notes:
+
+    Default options are `-uln --length 14`.
+
+    Minimum `length` is 5.
+
+    Minimum `words` is 3.
+
+  Examples:
+
+    bw generate
+    bw generate -u -l --length 18
+    bw generate -ulns --length 25
+    bw generate -ul
+    bw generate -p --separator _
+    bw generate -p --words 5 --separator space
+    bw generate -p --words 5 --separator empty

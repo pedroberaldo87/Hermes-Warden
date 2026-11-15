@@ -1,0 +1,24 @@
+Usage: bw serve [options]
+
+Start a RESTful API webserver.
+
+Options:
+  --hostname <hostname>        The hostname to bind your API webserver to.
+  --port <port>                The port to run your API webserver on.
+  --disable-origin-protection  If set, allows requests with origin header.
+                               Warning, this option exists for backwards
+                               compatibility reasons and exposes your
+                               environment to known CSRF attacks.
+  -h, --help                   display help for command
+
+  Notes:
+
+    Default hostname is `localhost`.
+    Use hostname `all` for no hostname binding.
+    Default port is `8087`.
+
+  Examples:
+
+    bw serve
+    bw serve --port 8080
+    bw serve --hostname bwapi.mydomain.com --port 80

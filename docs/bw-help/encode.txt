@@ -1,0 +1,14 @@
+Usage: bw encode [options]
+
+Base 64 encode stdin.
+
+Options:
+  -h, --help  display help for command
+
+  Notes:
+
+    Use to create `encodedJson` for `create` and `edit` commands.
+
+  Examples:
+
+    echo '{"name":"My Folder"}' | bw encode

@@ -1,0 +1,9 @@
+{
+  "name": "hermes-warden",
+  "label": "Hermes Warden",
+  "description": "Backend for the Hermes Warden lock tab: Bitwarden status, masked dialogs and clipboard deliveries.",
+  "icon": "Lock",
+  "version": "0.1.0",
+  "tab": { "hidden": true },
+  "api": "plugin_api.py"
+}

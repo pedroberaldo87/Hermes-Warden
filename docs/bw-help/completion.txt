@@ -1,0 +1,15 @@
+Usage: bw completion [options]
+
+Generate shell completions.
+
+Options:
+  --shell <shell>  Shell to generate completions for.
+  -h, --help       display help for command
+
+  Notes:
+
+    Valid shells are `zsh`.
+
+  Examples:
+
+    bw completion --shell zsh

@@ -1,0 +1,24 @@
+Usage: bw send get [options] <id>
+
+Get Sends owned by you.
+
+Options:
+  --output <output>  Output directory or filename for attachment.
+  --text             Specifies to return the text content of a Send
+  -h, --help         display help for command
+
+  Id:
+
+    Search term or Send's globally unique `id`.
+
+    If raw output is specified and no output filename or directory is given for
+    an attachment query, the attachment content is written to stdout.
+
+  Examples:
+
+    bw send get searchText
+    bw send get id
+    bw send get searchText --text
+    bw send get searchText --file
+    bw send get searchText --file --output ../Photos/photo.jpg
+    bw send get searchText --file --raw

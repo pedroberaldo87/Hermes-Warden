@@ -1,0 +1,29 @@
+Usage: bw export [options]
+
+Export vault data to a CSV, JSON or ZIP file.
+
+Options:
+  --output <output>                  Output directory or filename.
+  --format <format>                  Export file format.
+  --password [password]              Use password to encrypt instead of your
+                                     Bitwarden account encryption key. Only
+                                     applies to the encrypted_json format.
+  --organizationid <organizationid>  Organization id for an organization.
+  -h, --help                         display help for command
+
+  Notes:
+
+    Valid formats are `csv`, `json`, `encrypted_json` and zip. Default format is `csv`.
+
+    If --raw option is specified and no output filename or directory is given, the
+    result is written to stdout.
+
+  Examples:
+
+    bw export
+    bw --raw export
+    bw export myPassword321
+    bw export myPassword321 --format json
+    bw export --output ./exp/bw.csv
+    bw export myPassword321 --output bw.json --format json
+    bw export myPassword321 --organizationid 7063feab-4b10-472e-b64c-785e2b870b92

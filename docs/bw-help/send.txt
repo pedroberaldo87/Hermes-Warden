@@ -1,0 +1,39 @@
+Usage: bw send [options] [command] <data>
+
+Work with Bitwarden sends. A Send can be quickly created using this command or
+subcommands can be used to fine-tune the Send
+
+Arguments:
+  data                            The data to Send. Specify as a filepath with
+                                  the --file option
+
+Options:
+  -f, --file                      Specifies that <data> is a filepath
+  -d, --deleteInDays <days>       The number of days in the future to set
+                                  deletion date, defaults to 7. If a particular
+                                  deletion date is mandated by enterprise policy
+                                  that value will override this flag. (default:
+                                  "7")
+  --password <password>           optional password to access this Send. Can
+                                  also be specified in JSON.
+  --emails <emails>               optional emails to access this Send. Can also
+                                  be specified in JSON.
+  -a, --maxAccessCount <amount>   The amount of max possible accesses.
+  --hidden                        Hide <data> in web by default. Valid only if
+                                  --file is not set.
+  -n, --name <name>               The name of the Send. Defaults to a guid for
+                                  text Sends and the filename for files.
+  --notes <notes>                 Notes to add to the Send.
+  --fullObject                    Specifies that the full Send object should be
+                                  returned rather than just the access url.
+  -h, --help                      display help for command
+
+Commands:
+  list                            List all the Sends owned by you
+  template <object>               Get json templates for send objects
+  get [options] <id>              Get Sends owned by you.
+  receive [options] <url>         Access a Bitwarden Send from a url
+  create [options] [encodedJson]  create a Send
+  edit [options] [encodedJson]    edit a Send
+  remove-password <id>            removes the saved password from a Send.
+  delete <id>                     delete a Send

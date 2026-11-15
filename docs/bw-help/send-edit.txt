@@ -1,0 +1,14 @@
+Usage: bw send edit [options] [encodedJson]
+
+edit a Send
+
+Arguments:
+  encodedJson        Updated JSON object to save. If not provided, encodedJson
+                     is read from stdin.
+
+Options:
+  --itemid <itemid>  Overrides the itemId provided in [encodedJson]
+  -h, --help         display help for command
+
+Note:
+  You cannot update a File-type Send's file. Just delete and remake it

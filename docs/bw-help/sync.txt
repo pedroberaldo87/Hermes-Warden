@@ -1,0 +1,14 @@
+Usage: bw sync [options]
+
+Pull the latest vault data from server.
+
+Options:
+  -f, --force  Force a full sync.
+  --last       Get the last sync date.
+  -h, --help   display help for command
+
+  Examples:
+
+    bw sync
+    bw sync -f
+    bw sync --last

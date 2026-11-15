@@ -1,0 +1,14 @@
+Usage: bw archive [options] <object> <id>
+
+Archive an object from the vault.
+
+Arguments:
+  object      Valid objects are: item
+  id          Object's globally unique `id`.
+
+Options:
+  -h, --help  display help for command
+
+  Examples:
+
+    bw archive item 7063feab-4b10-472e-b64c-785e2b870b92

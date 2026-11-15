@@ -1,0 +1,25 @@
+Usage: bw import [options] [format] [input]
+
+Import vault data from a file.
+
+Arguments:
+  format                             The format of [input]
+  input                              Filepath to data to import
+
+Options:
+  --formats                          List formats
+  --organizationid <organizationid>  ID of the organization to import to.
+  --keyfile <keyfile>                Path to a key file used to unlock a KeePass
+                                     (kdbx) database.
+  --passwordenv <passwordenv>        Environment variable storing the import
+                                     file password.
+  --passwordfile <passwordfile>      Path to a file containing the import file
+                                     password as its first line.
+  -h, --help                         display help for command
+
+ Examples:
+
+    bw import --formats
+    bw import bitwardencsv ./from/source.csv
+    bw import keepass2xml keepass_backup.xml
+    bw import --organizationid cf14adc3-aca5-4573-890a-f6fa231436d9 keepass2xml keepass_backup.xml

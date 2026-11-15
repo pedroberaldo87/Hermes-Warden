@@ -1,0 +1,20 @@
+Usage: bw edit [options] <object> <id> [encodedJson]
+
+Edit an object from the vault.
+
+Arguments:
+  object                             Valid objects are: item, item-collections,
+                                     folder, org-collection
+  id                                 Object's globally unique `id`.
+  encodedJson                        Encoded json of the object to create. Can
+                                     also be piped into stdin.
+
+Options:
+  --organizationid <organizationid>  Organization id for an organization object.
+  -h, --help                         display help for command
+
+  Examples:
+
+    bw edit folder 5cdfbd80-d99f-409b-915b-f4c5d0241b02 eyJuYW1lIjoiTXkgRm9sZGVyMiJ9Cg==
+    echo 'eyJuYW1lIjoiTXkgRm9sZGVyMiJ9Cg==' | bw edit folder 5cdfbd80-d99f-409b-915b-f4c5d0241b02
+    bw edit item-collections 78307355-fd25-416b-88b8-b33fd0e88c82 WyI5NzQwNTNkMC0zYjMzLTRiOTgtODg2ZS1mZWNmNWM4ZGJhOTYiXQ==

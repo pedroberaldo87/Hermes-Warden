@@ -1,0 +1,22 @@
+Usage: bw report [options] <object>
+
+Generate a vault report.
+
+Arguments:
+  object              Valid objects are: password-health
+
+Options:
+  --no-check-exposed  Skip checking passwords against the Have I Been Pwned
+                      breach database (avoids network requests).
+  -h, --help          display help for command
+
+  Notes:
+
+    password-health reports each login's password strength (0-4), how many times the
+    password is reused, and whether it appears in a known data breach (Have I Been Pwned).
+
+  Examples:
+
+    bw report password-health
+    bw report password-health --no-check-exposed
+    bw report password-health --pretty

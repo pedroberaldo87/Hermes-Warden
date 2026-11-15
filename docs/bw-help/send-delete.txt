@@ -1,0 +1,9 @@
+Usage: bw send delete [options] <id>
+
+delete a Send
+
+Arguments:
+  id          The id of the Send to delete.
+
+Options:
+  -h, --help  display help for command

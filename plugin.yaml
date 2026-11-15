@@ -1,0 +1,24 @@
+name: hermes-warden
+label: Hermes Warden
+version: "0.1.0"
+description: Bitwarden built into Hermes. Set it up from a tab, use it from any chat; no secret ever enters the conversation.
+author: Pedro Beraldo
+license: MIT
+kind: standalone
+manifest_version: 1
+requires_hermes: ">=0.22.6"
+platforms:
+  - macos
+  - linux
+provides_tools:
+  - warden_status
+  - warden_session
+  - warden_find
+  - warden_bw
+  - warden_edit
+  - warden_secret
+  - warden_run
+  - warden_transfer
+  - warden_serve
+provides_hooks:
+  - pre_tool_call

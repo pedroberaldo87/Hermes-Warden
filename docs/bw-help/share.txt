@@ -1,0 +1,19 @@
+Usage: bw share [options] <id> <organizationId> [encodedJson]
+
+--DEPRECATED-- Move an item to an organization.
+
+Arguments:
+  id              Object's globally unique `id`.
+  organizationId  Organization's globally unique `id`.
+  encodedJson     Encoded json of an array of collection ids. Can also be piped
+                  into stdin.
+
+Options:
+  -h, --help      display help for command
+
+  Examples:
+
+    bw share 4af958ce-96a7-45d9-beed-1e70fabaa27a 6d82949b-b44d-468a-adae-3f3bacb0ea32 WyI5NzQwNTNkMC0zYjMzLTRiOTgtODg2ZS1mZWNmNWM4ZGJhOTYiXQ==
+    echo '["974053d0-3b33-4b98-886e-fecf5c8dba96"]' | bw encode | bw share 4af958ce-96a7-45d9-beed-1e70fabaa27a 6d82949b-b44d-468a-adae-3f3bacb0ea32
+
+--DEPRECATED See "bw move" for the current implementation--

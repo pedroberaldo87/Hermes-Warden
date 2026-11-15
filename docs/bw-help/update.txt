@@ -1,0 +1,17 @@
+Usage: bw update [options]
+
+Check for updates.
+
+Options:
+  -h, --help  display help for command
+
+  Notes:
+
+    Returns the URL to download the newest version of this CLI tool.
+
+    Use the `--raw` option to return only the download URL for the update.
+
+  Examples:
+
+    bw update
+    bw update --raw

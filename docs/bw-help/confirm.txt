@@ -1,0 +1,15 @@
+Usage: bw confirm [options] <object> <id>
+
+Confirm an object to the organization.
+
+Arguments:
+  object                             Valid objects are: org-member
+  id                                 Object's globally unique `id`.
+
+Options:
+  --organizationid <organizationid>  Organization id for an organization object.
+  -h, --help                         display help for command
+
+  Examples:
+
+    bw confirm org-member 7063feab-4b10-472e-b64c-785e2b870b92 --organizationid 310d5ffd-e9a2-4451-af87-ea054dce0f78

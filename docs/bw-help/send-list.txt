@@ -1,0 +1,7 @@
+Usage: bw send list [options]
+
+List all the Sends owned by you
+
+Options:
+  -h, --help  display help for command
+This is in the list command

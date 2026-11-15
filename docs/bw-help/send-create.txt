@@ -1,0 +1,15 @@
+Usage: bw send create [options] [encodedJson]
+
+create a Send
+
+Arguments:
+  encodedJson    JSON object to upload. Can also be piped in through stdin.
+
+Options:
+  --file <path>  file to Send. Can also be specified in parent's JSON.
+  --text <text>  text to Send. Can also be specified in parent's JSON.
+  --hidden       text hidden flag. Valid only with the --text option.
+  -h, --help     display help for command
+
+Note:
+  Options specified in JSON take precedence over command options

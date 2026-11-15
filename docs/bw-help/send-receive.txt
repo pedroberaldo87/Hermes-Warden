@@ -1,0 +1,16 @@
+Usage: bw send receive [options] <url>
+
+Access a Bitwarden Send from a url
+
+Options:
+  --password <password>          Password needed to access the Send.
+  --passwordenv <passwordenv>    Environment variable storing the Send's
+                                 password
+  --passwordfile <passwordfile>  Path to a file containing the Sends password as
+                                 its first line
+  --obj                          Return the Send's json object rather than the
+                                 Send's content
+  --output <location>            Specify a file path to save a File-type Send to
+  -h, --help                     display help for command
+
+If a password is required, the provided password is used or the user is prompted.

@@ -1,0 +1,9 @@
+Usage: bw send template [options] <object>
+
+Get json templates for send objects
+
+Arguments:
+  object      Valid objects are: send.text, text, send.file, file
+
+Options:
+  -h, --help  display help for command
