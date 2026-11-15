@@ -66,17 +66,18 @@ def unattended() -> bool:
     return str(get_session_env("HERMES_CRON_SESSION", "") or "").strip().lower() in ("1", "true", "yes", "on")
 
 
-def _call(op: str, **params: Any) -> dict:
+def _call(op: str, *, autostart: bool = True, **params: Any) -> dict:
     if unattended():
         params.setdefault("unattended", True)
     try:
-        return client.call(op, **params)
+        return client.call(op, autostart=autostart, **params)
     except client.BrokerUnavailable as exc:
         return {"ok": False, "error": str(exc), "code": "unavailable"}
 
 
 HINTS = {
     "locked": "Call warden_session with action=unlock; a masked dialog asks the user.",
+    "restarted": "Call the same tool again; a new dialog opens.",
     "unauthenticated": "Call warden_session with action=login; a masked dialog asks the user.",
     "not_installed": "Bitwarden CLI is missing. Call warden_session action=install (the user confirms), or ask "
                      "the user to press 'Install Bitwarden CLI' in the Warden tab.",
@@ -109,7 +110,14 @@ def _wait_prompt(kind: str, *, reason: str = "", label: str = "", timeout: float
     created = _call("prompt.create", kind=kind, reason=reason, label=label, timeout=timeout)
     if not created.get("ok"):
         return created
-    return _call("prompt.wait", id=created["id"], timeout=timeout)
+    # The wait must reach the broker that holds the dialog: never start or replace one here.
+    res = _call("prompt.wait", id=created["id"], timeout=timeout, autostart=False)
+    if not res.get("ok") and (res.get("code") == "not_running" or res.get("error") == "unknown prompt"):
+        return {"ok": False, "code": "restarted",
+                "error": "Hermes Warden restarted while the dialog was open, so the dialog was lost. Ask again."}
+    if created.get("note") and isinstance(res, dict):
+        res.setdefault("note", created["note"])
+    return res
 
 
 def _prompt_outcome(res: dict, success: dict) -> dict:

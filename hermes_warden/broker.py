@@ -1372,8 +1372,10 @@ class Broker:
 
     # ------------------------------------------------------------------ ops: state
     def op_ping(self, req: dict) -> dict:
+        with self.cond:
+            pending = sum(1 for p in self.prompts.values() if p["status"] == "pending")
         return {"pid": os.getpid(), "version": VERSION, "code": _CODE,
-                "root": str(Path(__file__).resolve().parent)}
+                "root": str(Path(__file__).resolve().parent), "pending_prompts": pending}
 
     def op_configure(self, req: dict) -> dict:
         relax = []

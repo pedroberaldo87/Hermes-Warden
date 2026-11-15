@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -92,21 +93,42 @@ def _version(text: Any) -> tuple:
         return (0,)
 
 
+def _disk_version() -> str:
+    """VERSION as written on disk now. A process that imported the package before an update
+    keeps the old constant in memory; comparing that against the broker made every call replace
+    a broker that was in fact current (Hermes Warden 0.2.1 dev build vs 0.1.0 published)."""
+    try:
+        text = Path(__file__).resolve().with_name("__init__.py").read_text(encoding="utf-8")
+        m = re.search(r"""^VERSION\s*=\s*["']([^"']+)["']""", text, re.M)
+        if m:
+            return m.group(1)
+    except OSError:
+        pass
+    return VERSION
+
+
 def _outdated(info: dict) -> bool:
-    """Replace a running broker only when it is older code: a newer version, or this very
-    install after an update. Two installs of the same version (a dev copy and the installed
-    one) share the broker instead of replacing each other, which would lock the vault."""
-    if _version(info.get("version")) != _version(VERSION):
-        return _version(info.get("version")) < _version(VERSION)
+    """Replace a running broker only when the code ON DISK is newer than it: a newer version, or
+    this very install after an update. Two installs of the same version (a dev copy and the
+    installed one) share the broker instead of replacing each other, which would lock the vault.
+    Memory is never the reference: a stale process would otherwise replace a current broker."""
+    disk = _disk_version()
+    if _version(info.get("version")) != _version(disk):
+        return _version(info.get("version")) < _version(disk)
     root = info.get("root")
     same_install = root is None or root == str(Path(__file__).resolve().parent)  # None: older broker
     return same_install and info.get("code") != code_hash()
 
 
 def ensure_running(wait: float = 8.0) -> bool:
-    """Start the broker if needed. True when an outdated one was replaced (the vault locks)."""
+    """Start the broker if needed. True when an outdated one was replaced (the vault locks).
+
+    A broker with a dialog open is never replaced: the dialog lives only in its memory, and the
+    next call (the wait for that dialog) would find a broker that never heard of it."""
     info = _ping()
     if info is not None and not _outdated(info):
+        return False
+    if info is not None and info.get("pending_prompts"):
         return False
     replaced = info is not None
     if replaced:

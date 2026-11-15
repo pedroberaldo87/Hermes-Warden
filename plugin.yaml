@@ -1,6 +1,6 @@
 name: hermes-warden
 label: Hermes Warden
-version: "0.1.0"
+version: "0.1.1"
 description: Bitwarden built into Hermes. Set it up from a tab, use it from any chat; no secret ever enters the conversation.
 author: Pedro Beraldo
 license: MIT
