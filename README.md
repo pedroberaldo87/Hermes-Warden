@@ -321,7 +321,7 @@ No terminal, no setup guide: a tab with a button for each step.<br>Then ask for 
 - **Files:** settings (no secrets) and the downloaded `bw`, if any, under `<Hermes home>/plugin-data/hermes-warden/`; exports and attachments only where you approve.
 - **Hermes profiles:** each profile has its own Warden: its own settings, broker and unlocked session, under that profile's home. Unlocking the vault in one profile unlocks nothing in another. A named profile also keeps its own Bitwarden login (in `bw-data/` under its folder), so you log in once per profile; the default profile uses the login `bw` already has on this computer.
 - **Approved commands (`warden_run`):** run on the Hermes host with a minimal environment (`PATH`, `HOME`, user, locale, terminal, temp folder, shell, proxy and certificate settings) plus the secrets you approved. Hermes' own variables, such as provider and gateway keys, are not passed.
-- **Terminal guard** (`pre_tool_call` hook): blocks the agent's terminal from running `bw` or reaching the broker, and from reading the clipboard during the 15 minutes after a secret was copied for you. Nothing else is affected.
+- **Terminal guard** (`pre_tool_call` hook): blocks the agent's terminal from running `bw` or reaching the broker, and from reading the clipboard during the 15 minutes after a secret was copied for you (in every profile, since the clipboard is shared). Nothing else is affected.
 
 **Limits**
 

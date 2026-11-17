@@ -113,9 +113,23 @@ def test_each_profile_has_its_own_data_dir_and_socket(monkeypatch, tmp_path):
     for name, home in (("default", root), ("work", root / "profiles" / "work"), ("bot", root / "profiles" / "bot")):
         _as_profile(monkeypatch, home)
         assert paths.data_dir() == home / "plugin-data" / "hermes-warden"
-        seen[name] = (paths.data_dir(), paths.socket_path(), paths.settings_path(), paths.clip_stamp())
-    for i in range(4):
+        seen[name] = (paths.data_dir(), paths.socket_path(), paths.settings_path())
+    for i in range(3):
         assert len({v[i] for v in seen.values()}) == 3
+
+
+def test_clipboard_guard_is_shared_by_every_profile(monkeypatch, tmp_path):
+    """The clipboard belongs to the OS user: a secret copied for one profile must block
+    clipboard reads from every profile's terminal, not only its own."""
+    monkeypatch.setenv("HERMES_WARDEN_SHARED", str(tmp_path / "shared"))
+    root = tmp_path / "root"
+    _as_profile(monkeypatch, root / "profiles" / "owner")
+    assert tools.guard_terminal("terminal", {"command": "pbpaste"}) is None
+    broker_mod.Broker._stamp_clipboard()                       # what the owner's broker does on a copy
+    owner_stamp = paths.clip_stamp()
+    _as_profile(monkeypatch, root / "profiles" / "bot")
+    assert paths.clip_stamp() == owner_stamp
+    assert tools.guard_terminal("terminal", {"command": "pbpaste"})
 
 
 def test_profile_follows_the_context_local_hermes_home(monkeypatch, tmp_path):

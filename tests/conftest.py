@@ -32,6 +32,7 @@ def warden_home(monkeypatch):
     monkeypatch.setenv("FAKE_BW_STATE", str(base / "state.json"))
     monkeypatch.setenv("HERMES_WARDEN_PASSENV", "FAKE_BW_STATE")
     monkeypatch.setenv("HERMES_WARDEN_NO_HOST", "1")
+    monkeypatch.setenv("HERMES_WARDEN_SHARED", str(base / "shared"))  # never the user's real clipboard stamp
     home = base / "userhome"
     (home / "Downloads").mkdir(parents=True)
     (home / "Library" / "LaunchAgents").mkdir(parents=True)

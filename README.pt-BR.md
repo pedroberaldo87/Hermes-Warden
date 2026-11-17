@@ -321,7 +321,7 @@ Sem terminal e sem tutorial: uma aba com um botão para cada passo.<br>Depois é
 - **Arquivos:** ajustes (sem segredos) e o `bw` baixado, se houver, em `<pasta do Hermes>/plugin-data/hermes-warden/`; exportações e anexos só onde você aprovar.
 - **Perfis do Hermes:** cada perfil tem o seu próprio Warden: ajustes, broker e sessão destrancada próprios, na pasta daquele perfil. Destrancar o cofre num perfil não destranca nada em outro. Um perfil com nome também guarda o próprio login do Bitwarden (em `bw-data/`, na pasta dele), então você faz login uma vez por perfil; o perfil padrão usa o login que o `bw` já tem neste computador.
 - **Comandos aprovados (`warden_run`):** rodam no host do Hermes com um ambiente mínimo (`PATH`, `HOME`, usuário, idioma, terminal, pasta temporária, shell, ajustes de proxy e de certificados) mais os segredos que você aprovou. As variáveis do próprio Hermes, como chaves de provedores e do gateway, não são passadas.
-- **Trava do terminal** (hook `pre_tool_call`): impede o terminal do agente de rodar `bw` ou falar com o broker, e de ler a área de transferência nos 15 minutos depois de um segredo copiado para você. Nada além disso é afetado.
+- **Trava do terminal** (hook `pre_tool_call`): impede o terminal do agente de rodar `bw` ou falar com o broker, e de ler a área de transferência nos 15 minutos depois de um segredo copiado para você (em todos os perfis, porque a área de transferência é uma só). Nada além disso é afetado.
 
 **Limites**
 

@@ -133,8 +133,11 @@ def socket_path() -> Path:
 
 def clip_stamp() -> Path:
     """Touched when a secret goes to a clipboard; the terminal guard blocks clipboard reads
-    for a while after it (and only then)."""
-    return run_dir() / "clip.stamp"
+    for a while after it (and only then). One stamp for the OS user, not per profile: the
+    clipboard is shared, so a secret copied for one profile must close it to every profile."""
+    override = os.environ.get("HERMES_WARDEN_SHARED")
+    shared = Path(override).expanduser() if override else _user_temp() / f"hw-{os.getuid()}-shared"
+    return _ensure_private_dir(shared) / "clip.stamp"
 
 
 def bin_dir() -> Path:

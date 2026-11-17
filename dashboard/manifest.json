@@ -3,7 +3,7 @@
   "label": "Hermes Warden",
   "description": "Backend for the Hermes Warden lock tab: Bitwarden status, masked dialogs and clipboard deliveries.",
   "icon": "Lock",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "tab": { "hidden": true },
   "api": "plugin_api.py"
 }
