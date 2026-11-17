@@ -85,8 +85,11 @@ def test_receive_is_confirmed_and_paths_are_case_insensitive(broker, warden_home
 
 
 def test_receive_accepts_official_send_links(broker):
+    own = "https://vault.example.org:8443/#/send/a/b"
+    assert broker.call("receive", url=own)["code"] == "invalid"      # not this vault's server (yet)
+    assert broker.call("set_server", url="https://vault.example.org:8443", _ui=True)["ok"]
     for url in ("https://send.bitwarden.com/#AbC123/xYz-9", "https://send.bitwarden.eu/#AbC/k-1",
-                "https://vault.bitwarden.com/#/send/AbC/key", "https://vault.example.org:8443/#/send/a/b"):
+                "https://vault.bitwarden.com/#/send/AbC/key", own):
         res, _ = confirmed(broker, broker.call, "receive", url=url, mode="slot", accept=False)
         assert res["code"] == "not_confirmed", url
     for url in ("http://send.bitwarden.com/#a/b", "https://send.bitwarden.com/a/b", "javascript:x#a/b"):

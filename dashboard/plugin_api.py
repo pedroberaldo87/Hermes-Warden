@@ -14,6 +14,7 @@ exchange with the Desktop window that asked for them, never through the agent.
 """
 from __future__ import annotations
 
+import contextvars
 import hashlib
 import importlib
 import importlib.util
@@ -42,15 +43,23 @@ _package = sys.modules[_PACKAGE_NAME]
 
 bwcli = importlib.import_module(".bwcli", _PACKAGE_NAME)
 client = importlib.import_module(".client", _PACKAGE_NAME)
+paths = importlib.import_module(".paths", _PACKAGE_NAME)
 tools = importlib.import_module(".tools", _PACKAGE_NAME)
 VERSION = _package.VERSION
 
 router = APIRouter()
 
 _NO_STORE = {"Cache-Control": "no-store", "Pragma": "no-cache"}
-_install: dict[str, Any] = {"running": False, "result": None, "started": None}
+# One Hermes process can serve several profiles, and each has its own Warden (settings, broker,
+# Bitwarden login). Anything remembered between requests is kept per profile.
+_NO_INSTALL: dict[str, Any] = {"running": False, "result": None, "started": None}
+_installs: dict[str, dict[str, Any]] = {}
 _install_lock = threading.Lock()
-_status_cache: dict[str, Any] = {"at": 0.0, "data": None}
+_status_caches: dict[str, dict[str, Any]] = {}
+
+
+def _profile_key() -> str:
+    return str(paths.data_dir())
 
 
 def _resp(payload: dict, status: int = 200) -> JSONResponse:
@@ -123,13 +132,15 @@ def _installers() -> dict:
 def _cli_status() -> dict:
     """bw status without the broker (it is locked by definition: the key lives in the broker)."""
     now = time.monotonic()
-    if _status_cache["data"] and now - _status_cache["at"] < 20:
-        return dict(_status_cache["data"])
+    key = _profile_key()
+    cached = _status_caches.get(key)
+    if cached and now - cached["at"] < 20:
+        return dict(cached["data"])
     info = bwcli.status(None)
     info["version"] = bwcli.version()
     if info.get("status") == "unlocked":
         info["status"] = "locked"  # a BW_SESSION elsewhere is not ours
-    _status_cache.update(at=now, data=dict(info))
+    _status_caches[key] = {"at": now, "data": dict(info)}
     return info
 
 
@@ -137,12 +148,13 @@ def _cli_status() -> dict:
 def state() -> JSONResponse:
     """Everything the lock tab needs: install, login, lock, session, setup hints."""
     base = {"plugin_version": VERSION, "site": tools.SITE, "docs": tools.HELP_URL,
-            "installers": _installers(), "install": dict(_install), "platform": sys.platform}
+            "installers": _installers(), "install": dict(_installs.get(_profile_key(), _NO_INSTALL)),
+            "platform": sys.platform}
     if not bwcli.find_bw():
         return _resp({**base, "ok": True, "installed": False, "status": "not_installed"})
     if client.is_running():
         res = _call("status", autostart=False, timeout=60)
-        _status_cache.update(at=0.0, data=None)
+        _status_caches.pop(_profile_key(), None)
     else:
         res = {"ok": True, **_cli_status(), "broker": {"unlocked": False}}
     if not res.get("ok"):
@@ -153,35 +165,39 @@ def state() -> JSONResponse:
                   "lastSync": res.get("lastSync"), "session": res.get("broker") or {}})
 
 
-def _run_install() -> None:
+def _run_install(key: str) -> None:
     try:
         result = tools.install_cli()
     except Exception as exc:  # pragma: no cover - defensive
         result = {"ok": False, "error": type(exc).__name__}
     with _install_lock:
-        _install.update(running=False, result=result)
-    _status_cache.update(at=0.0, data=None)
+        _installs[key] = {**_installs.get(key, {}), "running": False, "result": result}
+    _status_caches.pop(key, None)
 
 
 @router.post("/install")
 def install() -> JSONResponse:
+    key = _profile_key()
     with _install_lock:
-        if _install["running"]:
+        if _installs.get(key, {}).get("running"):
             return _resp({"ok": True, "running": True})
-        _install.update(running=True, result=None, started=time.time())
-    threading.Thread(target=_run_install, name="warden-install", daemon=True).start()
+        _installs[key] = {"running": True, "result": None, "started": time.time()}
+    # A new thread starts with an empty context: carry the request's profile into it, or the
+    # CLI would be installed for the profile that launched Hermes.
+    context = contextvars.copy_context()
+    threading.Thread(target=context.run, args=(_run_install, key), name="warden-install", daemon=True).start()
     return _resp({"ok": True, "running": True})
 
 
 @router.post("/server")
 def server(body: dict = Body(default_factory=dict)) -> JSONResponse:
-    _status_cache.update(at=0.0, data=None)
+    _status_caches.pop(_profile_key(), None)
     return _resp(_call("set_server", url=str(body.get("url") or ""), _ui=True))
 
 
 @router.post("/session/{action}")
 def session(action: str, request: Request, body: dict = Body(default_factory=dict)) -> JSONResponse:
-    _status_cache.update(at=0.0, data=None)
+    _status_caches.pop(_profile_key(), None)
     if action == "lock":
         return _resp(_call("lock", autostart=False) if client.is_running() else {"ok": True, "unlocked": False})
     if action == "logout":
@@ -231,7 +247,7 @@ def prompt_answer(prompt_id: str, request: Request, body: dict = Body(default_fa
                 cancel=bool(body.get("cancel")), surface=_surface(body), timeout=200,
                 background=bool(body.get("background")))
     values.clear()
-    _status_cache.update(at=0.0, data=None)
+    _status_caches.pop(_profile_key(), None)
     return _resp({k: v for k, v in res.items() if k != "result" or "slot" not in (v or {})})
 
 

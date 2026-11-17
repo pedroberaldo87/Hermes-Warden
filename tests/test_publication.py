@@ -16,13 +16,14 @@ from hermes_warden import paths, tools
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_profile_home_maps_to_the_hermes_root(monkeypatch, tmp_path):
-    """One broker per user: every profile must find the same settings and socket."""
+def test_data_dir_follows_the_active_profile(monkeypatch, tmp_path):
+    """One broker per profile: a profile's settings and socket live under its own home."""
     monkeypatch.delenv("HERMES_WARDEN_HOME", raising=False)
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "root" / "profiles" / "work"))
-    assert paths.hermes_root() == tmp_path / "root"
+    assert paths.hermes_home() == tmp_path / "root" / "profiles" / "work"
+    assert paths.data_dir() == tmp_path / "root" / "profiles" / "work" / "plugin-data" / "hermes-warden"
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "custom"))
-    assert paths.hermes_root() == tmp_path / "custom"
+    assert paths.hermes_home() == tmp_path / "custom"
     assert paths.data_dir() == tmp_path / "custom" / "plugin-data" / "hermes-warden"
 
 

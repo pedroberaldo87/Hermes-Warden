@@ -95,7 +95,7 @@ def test_send_dialogs_name_the_send(broker):
 
 
 def test_send_url_trailing_slash_accepted(broker):
-    res, prompt = confirmed(broker, broker.call, "receive", url="https://vault.x.com/#/send/id/key/", accept=False)
+    res, prompt = confirmed(broker, broker.call, "receive", url="https://vault.bitwarden.com/#/send/id/key/", accept=False)
     assert res["code"] == "not_confirmed"
 
 

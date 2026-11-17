@@ -1,12 +1,17 @@
 """Where Hermes Warden keeps its runtime files.
 
-One broker per OS user (not per Hermes profile): the Bitwarden CLI keeps one state per
-user, and unlocking in one process invalidates the session key of any other, so two
-brokers would keep locking each other.
+One broker per Hermes profile: settings, socket, broker and unlocked session belong to the
+active profile, so a profile set up as a separate bot never reaches a vault another profile
+unlocked.
 
-- ``data_dir()``  <Hermes root>/plugin-data/hermes-warden: non-secret settings, and the
-  Bitwarden CLI when the Warden downloaded it. The Hermes root is ``HERMES_HOME`` (its
-  parent root when that points at a profile), else ~/.hermes.
+- ``data_dir()``  <HERMES_HOME>/plugin-data/hermes-warden: non-secret settings, and the
+  Bitwarden CLI when the Warden downloaded it. ``HERMES_HOME`` is the ACTIVE profile's home
+  (``hermes_constants.get_hermes_home()``: one Hermes process can serve several profiles, so
+  the process environment alone is not the answer).
+- ``bw_state_dir()``  a named profile keeps its own Bitwarden CLI state (login, server) under
+  its data dir. The CLI keeps one state per folder and an unlock invalidates the session key
+  of any other process on that state, so two brokers sharing it would keep locking each other.
+  The default profile uses the state `bw` already has for this user.
 - ``run_dir()``   <per-user runtime dir>/hw-<uid>-<hash>/: the socket and the lock. macOS:
   the per-user temp folder (/var/folders/…/T); Linux: ``XDG_RUNTIME_DIR`` (/run/user/<uid>);
   both private to the user, so nobody else can squat the name. Otherwise /tmp, where the
@@ -30,21 +35,22 @@ class UnsafeRunDir(RuntimeError):
     pass
 
 
-def hermes_root() -> Path:
-    """The Hermes root folder. One broker serves every profile of the user, so a profile's
-    ``HERMES_HOME`` (<root>/profiles/<name>) maps back to its root."""
-    raw = os.environ.get("HERMES_HOME")
-    if not raw:
-        return Path.home() / ".hermes"
-    home = Path(raw).expanduser()
-    if home.parent.name == "profiles":
-        return home.parent.parent
-    return home
+def hermes_home() -> Path:
+    """The active profile's Hermes home. Inside Hermes this is ``get_hermes_home()``, which
+    follows the context-local profile of the session or request being served; the broker
+    (a bare process, told its folder through ``HERMES_WARDEN_HOME``) and tests fall back to
+    the environment."""
+    try:
+        from hermes_constants import get_hermes_home
+    except ImportError:
+        raw = os.environ.get("HERMES_HOME")
+        return Path(raw).expanduser() if raw else Path.home() / ".hermes"
+    return Path(get_hermes_home())
 
 
 def data_dir() -> Path:
     override = os.environ.get("HERMES_WARDEN_HOME")
-    root = Path(override).expanduser() if override else hermes_root() / "plugin-data" / "hermes-warden"
+    root = Path(override).expanduser() if override else hermes_home() / "plugin-data" / "hermes-warden"
     root.mkdir(parents=True, exist_ok=True)
     try:
         os.chmod(root, 0o700)
@@ -55,6 +61,22 @@ def data_dir() -> Path:
 
 def settings_path() -> Path:
     return data_dir() / "settings.json"
+
+
+def bw_state_dir() -> Path | None:
+    """Folder for the Bitwarden CLI's own state (``BITWARDENCLI_APPDATA_DIR``), or None to
+    leave the CLI's default alone: the default profile, and anyone who set the variable."""
+    if os.environ.get("BITWARDENCLI_APPDATA_DIR") or os.environ.get("HERMES_WARDEN_HOME"):
+        return None
+    if hermes_home().parent.name != "profiles":
+        return None
+    state = data_dir() / "bw-data"
+    state.mkdir(mode=0o700, exist_ok=True)
+    try:
+        os.chmod(state, 0o700)
+    except OSError:
+        pass
+    return state
 
 
 def _ensure_private_dir(path: Path) -> Path:

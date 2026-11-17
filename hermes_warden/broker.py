@@ -716,6 +716,24 @@ def _new_id(prefix: str) -> str:
     return f"{prefix}_{secrets.token_hex(8)}"
 
 
+SEND_HOSTS = ("send.bitwarden.com", "send.bitwarden.eu", "vault.bitwarden.com", "vault.bitwarden.eu")
+
+
+def send_host_allowed(host: str, server_url: str | None) -> bool:
+    """A Send link is opened only on Bitwarden's own hosts or on the server this vault is
+    configured for: `bw receive` contacts whatever host the link names."""
+    from urllib.parse import urlsplit
+
+    host = (host or "").lower().rstrip(".")
+    if host in SEND_HOSTS:
+        return True
+    try:
+        configured = urlsplit(str(server_url or "")).hostname
+    except ValueError:
+        configured = None
+    return bool(configured) and host == str(configured).lower()
+
+
 class WardenError(Exception):
     def __init__(self, message: str, code: str = "error", **extra: Any):
         super().__init__(message)
@@ -2727,6 +2745,9 @@ class Broker:
             raise WardenError("url must be a Bitwarden Send link (https://send.bitwarden.com/#id/key or "
                               "https://<vault>/#/send/id/key)", "invalid")
         host = match.group(1)
+        if not send_host_allowed(host, self.op_status({}).get("serverUrl")):
+            raise WardenError(f"{_clean(host)} is neither Bitwarden nor the server this vault uses, so the link was "
+                              "not opened. Open it in a browser if you trust it.", "invalid")
         args = ["receive", url]
         # Destination checked up front (folder must exist, outside hidden/Library); the final
         # name is chosen after the download so a File Send keeps its own name.

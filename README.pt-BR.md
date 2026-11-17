@@ -157,7 +157,7 @@ Sem terminal e sem tutorial: uma aba com um botão para cada passo.<br>Depois é
 **Todos os recursos**
 
 - Uma aba de cadeado (linha **Warden** na barra lateral, ou o cadeado na barra de status): se o `bw` está instalado, qual servidor, se está logado, trancado ou destrancado, com um botão para cada passo e links para bitwarden.com e a documentação do CLI.
-- Instalar o Bitwarden CLI pela aba: Homebrew, npm ou, sem nenhum dos dois, a versão oficial da Bitwarden (bw 2026.10.1, das releases da Bitwarden no GitHub, recusada se o SHA-256 não bater).
+- Instalar o Bitwarden CLI pela aba: Homebrew, npm (fixado no bw 2026.10.1) ou, sem nenhum dos dois, a versão oficial da Bitwarden (o mesmo bw 2026.10.1, das releases da Bitwarden no GitHub, recusada se o SHA-256 não bater).
 - Login com senha mestra ou chave de API, incluindo código de duas etapas e de novo dispositivo; destrancar, trancar, sincronizar, sair.
 - Navegador do cofre: busca e cópia de usuário, senha, código TOTP, número do cartão ou nota num clique, ou exibição num diálogo mascarado.
 - Gerador: senhas e frases-senha, mascaradas até você pedir para ver.
@@ -212,6 +212,8 @@ Sem terminal e sem tutorial: uma aba com um botão para cada passo.<br>Depois é
 - Se o Warden não aparecer na barra lateral do Desktop, abra Capabilities → Plugins e ligue a chave Desktop da linha do Hermes Warden.
 - Se as ferramentas ou o `/warden` não aparecerem, reinicie o gateway: `hermes gateway restart`.
 - Depois de atualizar (`hermes plugins update hermes-warden`), reinicie o gateway do mesmo jeito para ele carregar o código novo. O cofre tranca uma vez: destrave de novo. Se uma ferramenta responder `restarted`, peça de novo e um diálogo novo abre.
+- Desde a 0.1.2, cada perfil do Hermes tem o seu próprio Warden. Se você usava o Warden a partir de um perfil com nome, esse perfil pede o login do Bitwarden uma vez e começa com os ajustes padrão. O perfil padrão mantém o login e os ajustes.
+- Se um comando do `warden_run` não achar uma variável que antes enxergava, inclua-a em `env` a partir de um item do cofre: o comando não herda mais o ambiente do Hermes.
 - Se o agente responder `no_surface`, nenhuma janela pode mostrar um diálogo: abra o Hermes Desktop ou o Webapp (no macOS, uma sessão logada no host do Hermes também serve).
 
 **Onde funciona**
@@ -317,6 +319,8 @@ Sem terminal e sem tutorial: uma aba com um botão para cada passo.<br>Depois é
 - **Comandos:** `bw`; `brew` ou `npm` na instalação; `osascript` no macOS para diálogos e área de transferência do host.
 - **Processos em segundo plano:** o broker (encerra quando o cofre está trancado e parado) e o `bw serve` enquanto você o mantiver ligado pela aba.
 - **Arquivos:** ajustes (sem segredos) e o `bw` baixado, se houver, em `<pasta do Hermes>/plugin-data/hermes-warden/`; exportações e anexos só onde você aprovar.
+- **Perfis do Hermes:** cada perfil tem o seu próprio Warden: ajustes, broker e sessão destrancada próprios, na pasta daquele perfil. Destrancar o cofre num perfil não destranca nada em outro. Um perfil com nome também guarda o próprio login do Bitwarden (em `bw-data/`, na pasta dele), então você faz login uma vez por perfil; o perfil padrão usa o login que o `bw` já tem neste computador.
+- **Comandos aprovados (`warden_run`):** rodam no host do Hermes com um ambiente mínimo (`PATH`, `HOME`, usuário, idioma, terminal, pasta temporária, shell, ajustes de proxy e de certificados) mais os segredos que você aprovou. As variáveis do próprio Hermes, como chaves de provedores e do gateway, não são passadas.
 - **Trava do terminal** (hook `pre_tool_call`): impede o terminal do agente de rodar `bw` ou falar com o broker, e de ler a área de transferência nos 15 minutos depois de um segredo copiado para você. Nada além disso é afetado.
 
 **Limites**

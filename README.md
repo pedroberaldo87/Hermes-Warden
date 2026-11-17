@@ -157,7 +157,7 @@ No terminal, no setup guide: a tab with a button for each step.<br>Then ask for 
 **Every feature**
 
 - A lock tab (sidebar **Warden**, or the lock chip in the status bar): is `bw` installed, which server, logged in, locked or unlocked, with a button for every step and links to bitwarden.com and the CLI docs.
-- Install the Bitwarden CLI from the tab: Homebrew, npm or, when neither is there, the official Bitwarden build (bw 2026.10.1, from Bitwarden's GitHub releases, refused unless its SHA-256 matches).
+- Install the Bitwarden CLI from the tab: Homebrew, npm (pinned to bw 2026.10.1) or, when neither is there, the official Bitwarden build (the same bw 2026.10.1, from Bitwarden's GitHub releases, refused unless its SHA-256 matches).
 - Log in with the master password or an API key, including two-step and new-device codes; unlock, lock, sync, log out.
 - Vault browser: search, copy username, password, TOTP code, card number or note in one click, or reveal it in a masked dialog.
 - Generator: passwords and passphrases, masked until you choose to show them.
@@ -212,6 +212,8 @@ No terminal, no setup guide: a tab with a button for each step.<br>Then ask for 
 - If Warden does not show up in the Desktop sidebar, open Capabilities → Plugins and turn on the Desktop switch of the Hermes Warden row.
 - If the tools or `/warden` do not show up, restart the gateway: `hermes gateway restart`.
 - After an update (`hermes plugins update hermes-warden`), restart the gateway the same way so it loads the new code. The vault locks once: unlock it again. If a tool answers `restarted`, ask again and a new dialog opens.
+- Since 0.1.2 every Hermes profile has its own Warden. If you used the Warden from a named profile before, that profile asks you to log in to Bitwarden once and starts from the default settings. The default profile keeps its login and settings.
+- If a `warden_run` command cannot find a variable it used to see, add it to `env` from a vault item: the command no longer inherits Hermes' environment.
 - If the agent answers `no_surface`, no window can show a dialog: open Hermes Desktop or the Webapp (on macOS, a logged-in session on the Hermes host also works).
 
 **Where it runs**
@@ -317,6 +319,8 @@ No terminal, no setup guide: a tab with a button for each step.<br>Then ask for 
 - **Commands:** `bw`; `brew` or `npm` when installing; `osascript` on macOS for host dialogs and the host clipboard.
 - **Background processes:** the broker (exits once the vault is locked and idle) and `bw serve` while you keep it running from the tab.
 - **Files:** settings (no secrets) and the downloaded `bw`, if any, under `<Hermes home>/plugin-data/hermes-warden/`; exports and attachments only where you approve.
+- **Hermes profiles:** each profile has its own Warden: its own settings, broker and unlocked session, under that profile's home. Unlocking the vault in one profile unlocks nothing in another. A named profile also keeps its own Bitwarden login (in `bw-data/` under its folder), so you log in once per profile; the default profile uses the login `bw` already has on this computer.
+- **Approved commands (`warden_run`):** run on the Hermes host with a minimal environment (`PATH`, `HOME`, user, locale, terminal, temp folder, shell, proxy and certificate settings) plus the secrets you approved. Hermes' own variables, such as provider and gateway keys, are not passed.
 - **Terminal guard** (`pre_tool_call` hook): blocks the agent's terminal from running `bw` or reaching the broker, and from reading the clipboard during the 15 minutes after a secret was copied for you. Nothing else is affected.
 
 **Limits**

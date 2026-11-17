@@ -104,8 +104,12 @@ def main(argv):
         raw("2026.10.1")
     if cmd == "status":
         st = "unauthenticated" if not state["logged_in"] else ("unlocked" if session_ok else "locked")
-        ok({"object": "template", "template": {"serverUrl": None, "lastSync": "2026-11-14T00:00:00Z",
+        ok({"object": "template", "template": {"serverUrl": state.get("server"), "lastSync": "2026-11-14T00:00:00Z",
                                                 "userEmail": state["email"], "userId": "u1", "status": st}})
+    if cmd == "config" and args[1:2] == ["server"] and len(args) > 2:
+        state["server"] = args[2]
+        save(state)
+        ok({"object": "message", "title": f"Saved setting `config`."})
     if cmd == "unlock":
         var = args[args.index("--passwordenv") + 1]
         if os.environ.get(var) != PASSWORD:

@@ -100,12 +100,14 @@ def find_bw() -> str | None:
     override = os.environ.get("HERMES_WARDEN_BW")
     if override:
         return override if os.access(override, os.X_OK) else None
-    cached = _PINNED.get("bw")
+    from . import paths
+    key = f"bw:{paths.data_dir()}"  # per profile: each may hold its own downloaded copy
+    cached = _PINNED.get(key)
     if cached and os.access(cached, os.X_OK):
         return cached
     found = shutil.which("bw", path=search_path())
     if found and _trusted(found):
-        _PINNED["bw"] = found
+        _PINNED[key] = found
         return found
     return None
 
@@ -122,6 +124,10 @@ def base_env() -> dict[str, str]:
         if name and name in os.environ and not name.startswith("BW_"):
             env[name] = os.environ[name]
     env["PATH"] = search_path()
+    from . import paths
+    state = paths.bw_state_dir()  # a named profile's own Bitwarden login (the broker gets it from its starter)
+    if state is not None:
+        env["BITWARDENCLI_APPDATA_DIR"] = str(state)
     env.setdefault("LANG", "en_US.UTF-8")
     env["NODE_NO_WARNINGS"] = "1"
     env["BW_NOINTERACTION"] = "true"

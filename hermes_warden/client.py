@@ -68,7 +68,12 @@ def start() -> None:
     for name in os.environ.get("HERMES_WARDEN_PASSENV", "").split(","):
         if name.strip() in os.environ:
             env[name.strip()] = os.environ[name.strip()]
-    env["HERMES_WARDEN_HOME"] = str(paths.data_dir())  # the broker must derive the same socket path
+    # The broker is a bare process: it cannot see which profile this call runs for. Resolve the
+    # profile's folders here and hand them over, so it derives the same socket and bw state.
+    state = paths.bw_state_dir()
+    if state is not None:
+        env["BITWARDENCLI_APPDATA_DIR"] = str(state)
+    env["HERMES_WARDEN_HOME"] = str(paths.data_dir())
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     subprocess.Popen(
         [sys.executable or "python3", "-s", str(broker), "--dir", str(run_dir)],

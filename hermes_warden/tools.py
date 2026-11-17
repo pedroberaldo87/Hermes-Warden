@@ -259,6 +259,21 @@ def _download_official() -> tuple[bool, str]:
     return True, ""
 
 
+def install_attempts() -> list[tuple[str, list[str] | None]]:
+    """Installers to try, in order. npm is pinned to the release whose official build is pinned by
+    checksum above, so both routes install the same, reviewed version."""
+    attempts: list[tuple[str, list[str] | None]] = []
+    brew = bwcli.find_tool("brew")
+    if brew:
+        attempts.append(("homebrew", [brew, "install", "bitwarden-cli"]))
+    npm = bwcli.find_tool("npm")
+    if npm and not brew:
+        attempts.append(("npm", [npm, "install", "-g", f"@bitwarden/cli@{BW_RELEASE}"]))
+    if official_asset():
+        attempts.append(("official", None))
+    return attempts
+
+
 def install_cli() -> dict:
     """Install the Bitwarden CLI: Homebrew, else npm, else the official build (checksum-pinned).
     Returns {ok, method, version|error}."""
@@ -267,15 +282,7 @@ def install_cli() -> dict:
     env = bwcli.base_env()
     env.pop("BW_NOINTERACTION", None)
     env["HOMEBREW_NO_AUTO_UPDATE"] = "1"
-    attempts: list[tuple[str, list[str] | None]] = []
-    brew = bwcli.find_tool("brew")
-    if brew:
-        attempts.append(("homebrew", [brew, "install", "bitwarden-cli"]))
-    npm = bwcli.find_tool("npm")
-    if npm and not brew:
-        attempts.append(("npm", [npm, "install", "-g", "@bitwarden/cli"]))
-    if official_asset():
-        attempts.append(("official", None))
+    attempts = install_attempts()
     if not attempts:
         return {"ok": False, "code": "no_installer",
                 "error": "No installer for this system (no Homebrew, npm or official build).", "download": SITE}
@@ -612,7 +619,8 @@ RUN_SCHEMA = {
         "Run a shell command on the Hermes host with vault secrets injected as environment variables, so "
         "you never see them. The user approves each run in a dialog that shows the full command and which "
         "item feeds each variable. Output comes back with injected values replaced by <warden:VAR> (best "
-        "effort: do not transform the values). Example: env {\"GH_TOKEN\": {\"item\": \"<id>\", \"field\": "
+        "effort: do not transform the values). The command gets a minimal environment (PATH, HOME, locale, "
+        "proxy settings) and none of Hermes' own variables: anything else it needs goes in `env`. Example: env {\"GH_TOKEN\": {\"item\": \"<id>\", \"field\": "
         "\"field:token\"}}, command 'gh auth status'. A spec may also be {\"slot\": \"slot_...\"}. "
         "Command up to 600 characters; for longer logic write a script file first."
     ),
@@ -631,6 +639,22 @@ RUN_SCHEMA = {
 }
 
 MAX_OUTPUT = 20000
+
+# What an approved command inherits from Hermes: enough to find programs, the home folder, the
+# locale, a terminal type and the way out to the network. Nothing else: the Hermes process holds
+# provider and gateway keys, and its own terminal strips those too. Whatever else the command
+# needs comes from the vault, through `env`.
+_RUN_ENV_KEYS = ("PATH", "HOME", "USER", "LOGNAME", "LANG", "TERM", "TMPDIR", "SHELL",
+                 "HTTPS_PROXY", "HTTP_PROXY", "ALL_PROXY", "NO_PROXY",
+                 "https_proxy", "http_proxy", "all_proxy", "no_proxy",
+                 "SSL_CERT_FILE", "SSL_CERT_DIR", "NODE_EXTRA_CA_CERTS", "REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE")
+
+
+def run_env() -> dict[str, str]:
+    env = {k: os.environ[k] for k in _RUN_ENV_KEYS if k in os.environ}
+    env.update({k: v for k, v in os.environ.items() if k.startswith("LC_")})
+    env.setdefault("PATH", "/usr/local/bin:/usr/bin:/bin")
+    return env
 
 
 def _kill_group(proc: subprocess.Popen) -> None:
@@ -673,9 +697,8 @@ def h_run(args: dict, **_: Any) -> str:
         for var, fifo in prep["fifos"].items():
             lines.append(f'{var}="$(/bin/cat {shlex.quote(fifo)})"; export {var}')
         lines.append(command)
-        env = {k: v for k, v in os.environ.items() if not k.startswith(("BW_", "HW_"))}
         proc = subprocess.Popen(["/bin/bash", "--noprofile", "--norc", "-c", "\n".join(lines)],
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, env=env,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, env=run_env(),
                                 stdin=subprocess.DEVNULL, start_new_session=True)
         try:
             raw_out, raw_err = proc.communicate(timeout=timeout)
@@ -839,8 +862,10 @@ def safe(handler: Callable[..., str]) -> Callable[..., str]:
 # minutes after a delivery (clipboard reads are left alone otherwise).
 
 _WRAPPERS = r"(?:sudo\s+(?:-\S+\s+)*|exec\s+|command\s+|nohup\s+|time\s+|nice\s+(?:-n\s*-?\d+\s+)?|" \
-            r"timeout\s+\S+\s+|xargs\s+(?:-\S+\s+)*|env\s+(?:-\S+\s+)*(?:\S+=\S*\s+)*)*"
-_BW_SEGMENT = re.compile(r"^\s*(?:\S+=\S*\s+)*" + _WRAPPERS + r"""["']?(?:\S*/)?bw["']?(?:\s|$)""")
+            r"timeout\s+\S+\s+|xargs\s+(?:-\S+\s+)*|env\s+(?:-\S+\s+)*(?:[^\s=]+=\S*\s+)*)*"
+# NAME=value prefixes: the name cannot hold "=". With \S+ a token such as a=a=a split in several
+# ways, and a command that did not match backtracked exponentially, stalling every terminal call.
+_BW_SEGMENT = re.compile(r"^\s*(?:[^\s=]+=\S*\s+)*" + _WRAPPERS + r"""["']?(?:\S*/)?bw["']?(?:\s|$)""")
 _BW_SAFE = re.compile(r"^\s*(?:\S*/)?bw\s+(?:--version|-v|--help|-h|help\b)\s*$")
 _SEGMENT_SPLIT = re.compile(r"\|\||&&|[;|&\n]|\$\(|`|\(|\{")
 # Shells that run a string: their quoted arguments are commands too.

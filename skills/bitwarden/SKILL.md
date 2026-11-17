@@ -1,7 +1,7 @@
 ---
 name: bitwarden
 description: Use when the user asks anything about Bitwarden or a password. Warden tools only.
-version: 0.1.1
+version: 0.1.2
 metadata:
   hermes:
     tags: [bitwarden, passwords, vault, secrets, security]
@@ -57,8 +57,8 @@ the user through a masked dialog, their clipboard, or straight into the command 
 | Rotate a password | `warden_edit` with `{"login": {"password": {"$generate": {"length": 24}}}}`, then `warden_secret deliver` |
 | Weak / reused passwords | Not here: per-item strength and reuse would let a prompt-injected agent test guesses. Point the user to the Vault Health reports in the Bitwarden web vault |
 | Is one password exposed? | `warden_bw` `["get", "exposed", "<id>"]` (asks the user; answers yes/no) |
-| Use a secret in a command (API token, deploy key) | `warden_run` with `env` |
-| Export / import / open a Send link | `warden_transfer` |
+| Use a secret in a command (API token, deploy key) | `warden_run` with `env`. The command gets a minimal environment (PATH, HOME, locale, proxy), none of Hermes' own variables: everything else it needs goes in `env` |
+| Export / import / open a Send link | `warden_transfer`. A Send link is opened only on bitwarden.com / bitwarden.eu or on the server this vault uses; for any other host tell the user to open it in a browser |
 | Local REST API | `warden_serve` status/stop; only the user starts it (Warden tab), `start` returns `desktop_only` |
 
 ## Placeholders inside `json` (warden_bw / warden_edit), secret fields only
