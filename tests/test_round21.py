@@ -267,6 +267,8 @@ def test_npm_install_is_pinned_to_the_official_release(monkeypatch):
     attempts = tools.install_attempts()
     npm = dict(attempts)["npm"]
     assert npm[-1] == f"@bitwarden/cli@{tools.BW_RELEASE}"
+    monkeypatch.setattr(tools.bwcli, "find_tool", lambda name: "/usr/bin/npm" if name == "npm" else None)
+    assert f"@bitwarden/cli@{tools.BW_RELEASE}" in tools.installer_name()     # the label says what runs
 
 
 @pytest.mark.parametrize("url,server,ok", [
@@ -274,6 +276,9 @@ def test_npm_install_is_pinned_to_the_official_release(monkeypatch):
     ("https://send.bitwarden.eu/#abc123/keyKEY", None, True),
     ("https://vault.bitwarden.com/#/send/abc123/keyKEY", None, True),
     ("https://vault.bitwarden.eu/#/send/abc123/keyKEY", "https://vault.bitwarden.eu", True),
+    ("https://vault.bitwarden.eu/#/send/abc123/keyKEY", None, False),
+    ("https://vault.bitwarden.com/#/send/abc123/keyKEY", "https://vault.example.org", False),
+    ("https://send.bitwarden.eu/#abc123/keyKEY", "https://vault.example.org", True),
     ("https://vault.example.org/#/send/abc123/keyKEY", "https://vault.example.org", True),
     ("https://vault.example.org:8443/#/send/abc123/keyKEY", "https://vault.example.org:8443", True),
     ("https://evil.example.net/#/send/abc123/keyKEY", None, False),

@@ -312,7 +312,7 @@ def installer_name() -> str | None:
     if bwcli.find_tool("brew"):
         return "Homebrew (brew install bitwarden-cli)"
     if bwcli.find_tool("npm"):
-        return "npm (npm install -g @bitwarden/cli)"
+        return f"npm (npm install -g @bitwarden/cli@{BW_RELEASE})"
     if official_asset():
         return f"the official Bitwarden build (bw {BW_RELEASE}, downloaded from GitHub and checksum-verified)"
     return None

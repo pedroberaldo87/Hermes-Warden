@@ -716,12 +716,14 @@ def _new_id(prefix: str) -> str:
     return f"{prefix}_{secrets.token_hex(8)}"
 
 
-SEND_HOSTS = ("send.bitwarden.com", "send.bitwarden.eu", "vault.bitwarden.com", "vault.bitwarden.eu")
+SEND_HOSTS = ("send.bitwarden.com", "send.bitwarden.eu")
+DEFAULT_SERVER_HOST = "vault.bitwarden.com"  # what `bw` uses when no server was configured
 
 
 def send_host_allowed(host: str, server_url: str | None) -> bool:
-    """A Send link is opened only on Bitwarden's own hosts or on the server this vault is
-    configured for: `bw receive` contacts whatever host the link names."""
+    """A Send link is opened only on Bitwarden's Send hosts or on the server this vault is
+    configured for (bitwarden.com when none was set): `bw receive` contacts whatever host the
+    link names."""
     from urllib.parse import urlsplit
 
     host = (host or "").lower().rstrip(".")
@@ -731,7 +733,7 @@ def send_host_allowed(host: str, server_url: str | None) -> bool:
         configured = urlsplit(str(server_url or "")).hostname
     except ValueError:
         configured = None
-    return bool(configured) and host == str(configured).lower()
+    return host == str(configured or DEFAULT_SERVER_HOST).lower()
 
 
 class WardenError(Exception):
