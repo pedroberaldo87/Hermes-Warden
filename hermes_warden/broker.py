@@ -2959,6 +2959,9 @@ class Broker:
                     # Close right now: no window at all.
                     self.op_lock({})
                     ret["_warden_session"] = {"status": "locked", "closed_automatically": True}
+                    # Keep the locked cache: the CLI's own lock runs in a thread, and asking it
+                    # right after would race that thread and report "unlocked".
+                    self._status_cache = self._status_as("locked")
                 else:
                     # A bounded window: the janitor closes the vault if the agent walks away.
                     self.last_used = _now()
@@ -2969,7 +2972,7 @@ class Broker:
                         "instruction": "Temporary window: finish with warden_session(action='lock') "
                                        "when the flow is done; the vault closes on its own when the lease expires.",
                     }
-                self._status_cache = None
+                    self._status_cache = None
             return ret
         except WardenError as exc:
             ret = {"ok": False, "error": str(exc), "code": exc.code, **exc.extra}
