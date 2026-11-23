@@ -159,7 +159,8 @@ def h_status(args: dict, **_: Any) -> str:
            "server": res.get("serverUrl") or "https://vault.bitwarden.com (default)",
            "account": res.get("userEmail"), "lastSync": res.get("lastSync"),
            "session": {k: broker.get(k) for k in ("unlocked", "autolock_seconds", "autolock_remaining",
-                                                  "prompt_surface", "clipboard_clear_seconds")}}
+                                                  "agent_lease_remaining", "prompt_surface",
+                                                  "clipboard_clear_seconds")}}
     if res.get("status") == "unauthenticated":
         out["next"] = "Call warden_session action=login."
     elif res.get("status") == "locked":
@@ -583,6 +584,8 @@ SECRET_SCHEMA = {
 def h_secret(args: dict, **_: Any) -> str:
     action = args.get("action")
     mode = args.get("mode") or "auto"
+    keep = args.get("keep_open")
+    keep_open = True if keep is None else bool(keep)
     if mode not in DELIVERY_MODES:
         return _err(f"mode must be one of {', '.join(DELIVERY_MODES)}", "invalid")
     if action == "ask":
@@ -597,7 +600,7 @@ def h_secret(args: dict, **_: Any) -> str:
         return _j(out)
     if action == "generate":
         res = _call("generate", options=args.get("options") or {}, to=mode if mode != "auto" else "auto",
-                    label=str(args.get("label") or "generated password"))
+                    label=str(args.get("label") or "generated password"), keep_open=keep_open)
         res = {k: v for k, v in res.items() if k != "value"}
         if res.get("ok") and res.get("slot"):
             res["use"] = f"Pass {{\"$slot\": \"{res['slot']}\"}} inside a secret field of warden_bw/warden_edit json."
@@ -611,7 +614,7 @@ def h_secret(args: dict, **_: Any) -> str:
             source = {"item": args["item"], "field": args.get("field") or "password"}
         else:
             return _err("item or send_id required", "invalid")
-        res = _call("deliver", source=source, mode=mode, reason=str(args.get("reason") or ""))
+        res = _call("deliver", source=source, mode=mode, reason=str(args.get("reason") or ""), keep_open=keep_open)
         res = {k: v for k, v in res.items() if k != "value"}
         if res.get("ok"):
             res["note"] = "Delivered outside the conversation. Do not ask the user to paste it here."
@@ -723,7 +726,7 @@ def h_run(args: dict, **_: Any) -> str:
         red_out = _call("run.redact", run_id=run_id, text=out).get("text", "")[-MAX_OUTPUT:]
         red_err = _call("run.redact", run_id=run_id, text=err).get("text", "")[-MAX_OUTPUT:]
     finally:
-        _call("run.finish", run_id=run_id)
+        _call("run.finish", run_id=run_id, keep_open=False)
     return _j({"ok": rc == 0, "exit_code": rc, "stdout": red_out, "stderr": red_err})
 
 
@@ -749,6 +752,8 @@ TRANSFER_SCHEMA = {
             "url": {"type": "string", "description": "receive: the Send link."},
             "mode": {"type": "string", "enum": ["auto", "desktop_clipboard", "desktop_reveal", "host_clipboard"], "default": "auto"},
             "reason": {"type": "string"},
+            "keep_open": {"type": "boolean", "default": True,
+                          "description": "Leave the vault unlocked for the next tool call in this turn (90-second lease). Pass false to lock right after execution."},
         },
         "required": ["action"],
         "additionalProperties": False,
@@ -767,6 +772,7 @@ def _ask_password_slot(label: str) -> tuple[str | None, dict | None]:
 def h_transfer(args: dict, **_: Any) -> str:
     action = args.get("action")
     reason = str(args.get("reason") or "")
+    keep_open = bool(args.get("keep_open", True))
     slot = None
     if action == "export":
         fmt = args.get("format") or "encrypted_json"
@@ -775,7 +781,7 @@ def h_transfer(args: dict, **_: Any) -> str:
             if err:
                 return _j(err)
         return _j(_hint(_call("export", format=fmt, output=args.get("path"), organization_id=args.get("organization_id"),
-                              password_slot=slot, reason=reason, timeout=400)))
+                              password_slot=slot, reason=reason, timeout=400, keep_open=keep_open)))
     if action == "import":
         if not args.get("format") or not args.get("path"):
             return _err("format and path required", "invalid")
@@ -784,7 +790,8 @@ def h_transfer(args: dict, **_: Any) -> str:
             if err:
                 return _j(err)
         return _j(_hint(_call("import", format=args["format"], input=args["path"], reason=reason,
-                              organization_id=args.get("organization_id"), password_slot=slot, timeout=700)))
+                              organization_id=args.get("organization_id"), password_slot=slot, timeout=700,
+                              keep_open=keep_open)))
     if action == "receive":
         if not args.get("url"):
             return _err("url required", "invalid")
@@ -795,7 +802,8 @@ def h_transfer(args: dict, **_: Any) -> str:
             slot, err = _ask_password_slot("Password of the Send")
             if err:
                 return _j(err)
-        res = _call("receive", url=args["url"], output=args.get("path"), password_slot=slot, mode=mode, timeout=200)
+        res = _call("receive", url=args["url"], output=args.get("path"), password_slot=slot, mode=mode, timeout=200,
+                    keep_open=keep_open)
         return _j(_hint({k: v for k, v in res.items() if k != "value"}))
     return _err(f"unknown action {action}", "invalid")
 

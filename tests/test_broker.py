@@ -360,3 +360,42 @@ def test_default_keeps_unlocked_for_follow_up_call(broker):
     res = broker.call("exec", args=["list", "items"])
     assert res["ok"] and "_warden_session" not in res
     assert broker.call("status")["status"] == "unlocked"
+
+
+def test_keep_open_true_sets_the_agent_lease(broker):
+    unlock(broker)
+    res = broker.call("exec", args=["list", "items"], keep_open=True)
+    assert res["ok"]
+    ws = res.get("_warden_session") or {}
+    assert ws.get("status") == "unlocked" and ws.get("lease_remaining_s") == 90
+    st = broker.call("status")
+    assert st["status"] == "unlocked" and st["broker"].get("agent_lease_remaining") is not None
+
+
+def test_janitor_closes_the_agent_lease(warden_home):
+    from hermes_warden import paths
+    from hermes_warden.broker import Broker
+
+    b = Broker(paths.run_dir())
+    b.session = "S" * 44
+    b.last_used = time.monotonic()
+    b.agent_lease_deadline = time.monotonic() - 1
+    locked = []
+    b.op_lock = lambda req: (locked.append(True), {"unlocked": False})[1]
+    b._janitor_tick()
+    assert locked
+
+
+def test_janitor_never_locks_with_an_op_in_flight(warden_home):
+    from hermes_warden import paths
+    from hermes_warden.broker import Broker
+
+    b = Broker(paths.run_dir())
+    b.session = "S" * 44
+    b.last_used = time.monotonic()
+    b.agent_lease_deadline = time.monotonic() - 1
+    b._active_ops = 1
+    locked = []
+    b.op_lock = lambda req: (locked.append(True), {"unlocked": False})[1]
+    b._janitor_tick()
+    assert not locked and b.session == "S" * 44

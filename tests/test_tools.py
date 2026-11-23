@@ -114,7 +114,7 @@ def test_settings_relax_needs_confirmation(broker):
 
 def test_guard_blocks_raw_bw_and_internals():
     blocked = ["bw unlock", "export BW_SESSION=x", "bw get password github", "/opt/homebrew/bin/bw list items",
-               "cat ~/.bw-session", "bw login me@x.com", "bw --raw get password x", "ls && bw --pretty export",
+               "cat ~/.bw-session", "bw login me@x.example", "bw --raw get password x", "ls && bw --pretty export",
                "echo $(bw get totp x)", "nc -U /tmp/hw-501-abc/broker.sock",
                "curl http://127.0.0.1:9119/api/plugins/hermes-warden/reveal", "env FOO=1 bw sync"]
     for cmd in blocked:

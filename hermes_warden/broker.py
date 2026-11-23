@@ -971,6 +971,7 @@ class Broker:
         self.serve_port: int | None = None
         self._status_cache: tuple[float, dict] | None = None
         self._session_gen = 0  # bumped on every unlock/lock, so racing status reads are not cached
+        self._active_ops = 0  # in-flight requests; the janitor never locks while one runs
         self._items_cache: dict[str, tuple[float, list]] = {}
         self._warm_done = threading.Event()  # cleared while the post-unlock sync runs
         self._warm_done.set()
@@ -1385,9 +1386,9 @@ class Broker:
             if now - flow.created > 900:
                 self.logins.pop(fid, None)
                 flow.close()
-        if self.session and now - self.last_used > self.autolock_s:
+        if not self._active_ops and self.session and now - self.last_used > self.autolock_s:
             self.op_lock({})
-        if self.session and self.agent_lease_deadline and now > self.agent_lease_deadline:
+        if not self._active_ops and self.session and self.agent_lease_deadline and now > self.agent_lease_deadline:
             self.agent_lease_deadline = None
             self.op_lock({})
         busy = (self.session or self.runs or self.logins or self.serve_proc or self.tickets
@@ -1485,9 +1486,8 @@ class Broker:
 
     def op_lock(self, req: dict) -> dict:
         self.agent_lease_deadline = None
-        with self.cond:
-            key = self.session
-            self._forget_session()  # forget first: never wait on a long bw call to lock
+        key = self.session
+        self._forget_session()  # forget first: never wait on a long bw call to lock
         if key:
             def tell_cli() -> None:
                 try:
@@ -2933,6 +2933,18 @@ class Broker:
         # Ops that never hold or hand out a secret: no vault window, no lease.
         no_lease = ("unlock", "login.start", "login.continue", "login.apikey_slots", "lock", "logout",
                     "ping", "state", "status")
+        with self.cond:
+            self._active_ops += 1
+        try:
+            return self._dispatch(op, fn, req, keep_open, no_lease)
+        finally:
+            # The janitor never locks while an op is running: a long export or run must not be
+            # cut in half by the lease or by the inactivity timer.
+            with self.cond:
+                self._active_ops -= 1
+                self.cond.notify_all()
+
+    def _dispatch(self, op: str, fn, req: dict, keep_open: bool | None, no_lease: tuple[str, ...]) -> dict:
         try:
             res = fn(req) or {}
             ret = {"ok": True, **res}
