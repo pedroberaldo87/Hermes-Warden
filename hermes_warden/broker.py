@@ -2933,16 +2933,22 @@ class Broker:
         # Ops that never hold or hand out a secret: no vault window, no lease.
         no_lease = ("unlock", "login.start", "login.continue", "login.apikey_slots", "lock", "logout",
                     "ping", "state", "status")
-        with self.cond:
-            self._active_ops += 1
+        # Only ops that may use the vault pause the janitor. A prompt wait can block for minutes
+        # without touching the vault, so it must not extend the unlocked window.
+        track = op not in ("prompt.create", "prompt.list", "prompt.ack", "prompt.answer", "prompt.wait",
+                           "ping", "state", "status")
+        if track:
+            with self.cond:
+                self._active_ops += 1
         try:
             return self._dispatch(op, fn, req, keep_open, no_lease)
         finally:
-            # The janitor never locks while an op is running: a long export or run must not be
+            # The janitor never locks while an op is using the vault: a long export or run must not be
             # cut in half by the lease or by the inactivity timer.
-            with self.cond:
-                self._active_ops -= 1
-                self.cond.notify_all()
+            if track:
+                with self.cond:
+                    self._active_ops -= 1
+                    self.cond.notify_all()
 
     def _dispatch(self, op: str, fn, req: dict, keep_open: bool | None, no_lease: tuple[str, ...]) -> dict:
         try:

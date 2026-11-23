@@ -957,6 +957,19 @@ function toast(kind, message) {
   }
 }
 
+/* Every copy path closes the vault. A failed request is retried once and then shown, so a
+   copy never leaves the vault open silently. */
+function lockNow(attempt = 0) {
+  post('/session/lock').then(res => {
+    if (!res || res.ok !== false) return
+    if (attempt < 1) return lockNow(attempt + 1)
+    toast('error', res.error || t('err'))
+  }).catch(() => {
+    if (attempt < 1) setTimeout(() => lockNow(1), 500)
+    else toast('error', t('err'))
+  })
+}
+
 /* Read the system clipboard with the Clipboard API (null when the window may not, e.g. it is in
    the background). The SDK offers no read; the raw desktop bridge is off limits for plugins. */
 async function readClipboard() {
@@ -1274,7 +1287,7 @@ function RevealDialog({ ticket, onClose }) {
         jsxs(DialogFooter, {
           children: [
             jsx(Button, { variant: 'ghost', onClick: () => setShown(s => !s), children: shown ? t('hide') : t('reveal') }),
-            jsx(Button, { onClick: () => copySecret(value, ticket.label, ticket.clear_after).finally(() => post('/session/lock').catch(() => {})), children: t('copy') }),
+            jsx(Button, { onClick: () => copySecret(value, ticket.label, ticket.clear_after).finally(() => lockNow()), children: t('copy') }),
             jsx(Button, { variant: 'secondary', onClick: onClose, children: t('done') })
           ]
         })
@@ -1358,7 +1371,7 @@ function DialogHost() {
           setReveal({ ...res, id: tk.id })
         } else {
           copySecret(res.value, res.label, res.clear_after).then(okCopy => {
-            post('/session/lock').catch(() => {})
+            lockNow()
             if (!okCopy) setReveal({ ...res, id: tk.id })
           })
         }
@@ -1735,7 +1748,7 @@ function ItemRow({ item, clearAfter }) {
       const res = await post('/reveal', { item: item.id, field })
       if (res && res.ok && typeof res.value === 'string') {
         await copySecret(res.value, `${item.name}: ${label}`, res.clear_after ?? clearAfter)
-        post('/session/lock').catch(() => {})
+        lockNow()
       }
       else toast('error', (res && res.error) || t('err'))
     } finally {
@@ -1889,7 +1902,7 @@ function GeneratorCard({ st }) {
                   children: shown ? value : '•'.repeat(Math.min(32, value.length))
                 }),
                 jsx(Button, { size: 'xs', variant: 'ghost', onClick: () => setShown(s => !s), children: shown ? t('hide') : t('reveal') }),
-                jsx(Button, { size: 'xs', onClick: () => { copySecret(value, t('password'), (st.session && st.session.clipboard_clear_seconds) ?? 30).finally(() => post('/session/lock').catch(() => {})) }, children: t('copy') })
+                jsx(Button, { size: 'xs', onClick: () => { copySecret(value, t('password'), (st.session && st.session.clipboard_clear_seconds) ?? 30).finally(() => lockNow()) }, children: t('copy') })
               ]
             })
           : null
