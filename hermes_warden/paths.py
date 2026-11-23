@@ -113,7 +113,7 @@ def _user_temp() -> Path:
         if not base:
             try:
                 base = subprocess.run(["/usr/bin/getconf", "DARWIN_USER_TEMP_DIR"], capture_output=True,
-                                      timeout=5).stdout.decode().strip() or None
+                                      env={"PATH": "/usr/bin:/bin"}, timeout=5).stdout.decode().strip() or None
             except (OSError, subprocess.SubprocessError):
                 base = None
     if base and os.path.isdir(base) and len(base) < 70:

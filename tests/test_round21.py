@@ -252,7 +252,12 @@ def test_install_from_the_tab_runs_in_the_requests_profile(monkeypatch, tmp_path
     active = contextvars.ContextVar("active_profile", default="launch profile")
     monkeypatch.setattr(api.tools, "install_cli", lambda: {"ok": True, "profile": active.get()})
     active.set("bot")
-    api.install()
+    from starlette.requests import Request
+
+    request = Request({"type": "http", "method": "POST", "path": "/install", "headers": [],
+                       "client": ("127.0.0.1", 1234), "scheme": "http",
+                       "server": ("127.0.0.1", 80), "query_string": b"", "root_path": ""})
+    api.install(request)
     key = api._profile_key()
     deadline = time.time() + 5
     while api._installs[key]["running"] and time.time() < deadline:

@@ -459,7 +459,7 @@ BW_SCHEMA = {
         "username, uri, exposed, folder, collection, org-collection, organization, template, fingerprint, send, "
         "attachment with --output); create; edit; delete; restore; archive; move; confirm org-member; "
         "send (list, template, get, create, edit, delete, remove-password); sync; "
-        "status; sdk-version; update. Secrets in results are replaced by <hidden>. For create/edit/move pass "
+        "status; sdk-version. Secrets in results are replaced by <hidden>. For create/edit/move pass "
         "the object in `json` (encoded for you). Inside secret fields only (login.password, login.totp, notes, "
         "fields[].value, card.number/code, sshKey.privateKey, Send text.text/password) you may use: "
         "{\"$generate\": {\"length\": 24}}, {\"$slot\": \"slot_...\"} (a value the user typed via "

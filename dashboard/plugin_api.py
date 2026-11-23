@@ -176,7 +176,9 @@ def _run_install(key: str) -> None:
 
 
 @router.post("/install")
-def install() -> JSONResponse:
+def install(request: Request) -> JSONResponse:
+    if not _secure(request):
+        return _insecure()
     key = _profile_key()
     with _install_lock:
         if _installs.get(key, {}).get("running"):
@@ -190,7 +192,9 @@ def install() -> JSONResponse:
 
 
 @router.post("/server")
-def server(body: dict = Body(default_factory=dict)) -> JSONResponse:
+def server(request: Request, body: dict = Body(default_factory=dict)) -> JSONResponse:
+    if not _secure(request):
+        return _insecure()
     _status_caches.pop(_profile_key(), None)
     return _resp(_call("set_server", url=str(body.get("url") or ""), _ui=True))
 
@@ -293,7 +297,9 @@ def generate(request: Request, body: dict = Body(default_factory=dict)) -> JSONR
 
 
 @router.post("/serve/{action}")
-def serve(action: str, body: dict = Body(default_factory=dict)) -> JSONResponse:
+def serve(action: str, request: Request, body: dict = Body(default_factory=dict)) -> JSONResponse:
+    if not _secure(request):
+        return _insecure()
     if action == "start":
         return _resp(_call("serve.start", port=body.get("port"), _ui=True))
     return _resp(_call("serve.stop", autostart=False) if client.is_running() else {"ok": True, "running": False})

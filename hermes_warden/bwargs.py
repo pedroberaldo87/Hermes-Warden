@@ -45,7 +45,6 @@ ALLOW: dict[str, dict] = {
     "sync": {"objects": None, "opts": {"--force": False, "--last": False}},
     "status": {"objects": None, "opts": {}},
     "sdk-version": {"objects": None, "opts": {}},
-    "update": {"objects": None, "opts": {}},
 }
 
 SEND_SUBS: dict[str, dict] = {
@@ -194,7 +193,7 @@ def _parse_with(tokens: list[str], command: str, spec: dict[str, bool]) -> Parse
 
 
 def needs_session(p: Parsed) -> bool:
-    if p.command in ("status", "sdk-version", "update"):
+    if p.command in ("status", "sdk-version"):
         return False
     if p.command == "send" and p.obj == "template":
         return False

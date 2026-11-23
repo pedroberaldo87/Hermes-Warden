@@ -2887,7 +2887,7 @@ class Broker:
             return
         try:
             cmd = subprocess.run(["/bin/ps", "-o", "command=", "-p", str(pid)], capture_output=True,
-                                 timeout=5).stdout.decode()
+                                 env={"PATH": "/bin:/usr/bin"}, timeout=5).stdout.decode()
             if f"serve --hostname 127.0.0.1 --port {port_s}" in cmd:
                 os.kill(pid, signal.SIGTERM)
         except (OSError, subprocess.SubprocessError):

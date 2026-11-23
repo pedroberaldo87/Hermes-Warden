@@ -52,11 +52,19 @@ def available() -> bool:
     return sys.platform == "darwin" and os.environ.get("HERMES_WARDEN_NO_HOST") != "1"
 
 
+def host_env() -> dict[str, str]:
+    """The minimum a macOS helper needs, never the Hermes environment."""
+    keys = ("PATH", "HOME", "TMPDIR", "LANG", "USER", "LOGNAME", "SHELL")
+    env = {k: os.environ[k] for k in keys if k in os.environ}
+    env.setdefault("PATH", "/usr/bin:/bin:/usr/sbin:/sbin")
+    return env
+
+
 def _osascript(script: str, args: list[str], timeout: float) -> tuple[int, str]:
     try:
         proc = subprocess.run(
             ["/usr/bin/osascript", "-", *args], input=script.encode(), capture_output=True,
-            timeout=timeout,
+            env=host_env(), timeout=timeout,
         )
     except (OSError, subprocess.TimeoutExpired):
         return 124, ""
@@ -119,7 +127,7 @@ def copy(value: str, clear_after: float = 30) -> bool:
         return False
     try:
         proc = subprocess.run(["/usr/bin/osascript", "-l", "JavaScript", "-e", _JXA_COPY],
-                              input=value.encode(), capture_output=True, timeout=10)
+                              input=value.encode(), capture_output=True, env=host_env(), timeout=10)
     except (OSError, subprocess.SubprocessError):
         return False
     stamp = proc.stdout.decode().strip()
@@ -129,7 +137,7 @@ def copy(value: str, clear_after: float = 30) -> bool:
         try:
             subprocess.Popen(["/usr/bin/osascript", "-l", "JavaScript", "-e", _JXA_CLEAR, stamp,
                               str(int(clear_after))], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL, start_new_session=True)
+                             stderr=subprocess.DEVNULL, env=host_env(), start_new_session=True)
         except OSError:
             pass
     return True
