@@ -954,6 +954,8 @@ class Broker:
         self.last_used = _now()
         self.last_request = _now()
         self.autolock_s = 15 * 60.0
+        self.agent_lease_s = 90.0
+        self.agent_lease_deadline: float | None = None
         self.clip_clear_s = 30.0
         self.ack_timeout = 8.0
         self.prompt_surface = "auto"  # auto | desktop | host
@@ -1385,6 +1387,9 @@ class Broker:
                 flow.close()
         if self.session and now - self.last_used > self.autolock_s:
             self.op_lock({})
+        if self.session and self.agent_lease_deadline and now > self.agent_lease_deadline:
+            self.agent_lease_deadline = None
+            self.op_lock({})
         busy = (self.session or self.runs or self.logins or self.serve_proc or self.tickets
                 or any(p["status"] == "pending" for p in self.prompts.values()))
         if not busy and now - self.last_request > IDLE_EXIT:
@@ -1421,10 +1426,13 @@ class Broker:
         remaining = None
         if self.session:
             remaining = max(0, int(self.autolock_s - (_now() - self.last_used)))
+            if self.agent_lease_deadline:
+                remaining = min(remaining, max(0, int(self.agent_lease_deadline - _now())))
         return {
             "unlocked": bool(self.session),
             "autolock_seconds": int(self.autolock_s),
             "autolock_remaining": remaining,
+            "agent_lease_remaining": max(0, int(self.agent_lease_deadline - _now())) if (self.session and self.agent_lease_deadline) else None,
             "clipboard_clear_seconds": int(self.clip_clear_s),
             "prompt_surface": self.prompt_surface,
             "pending_prompts": sum(1 for p in self.prompts.values() if p["status"] == "pending"),
@@ -1476,8 +1484,10 @@ class Broker:
         return {"unlocked": True}
 
     def op_lock(self, req: dict) -> dict:
-        key = self.session
-        self._forget_session()  # forget first: never wait on a long bw call to lock
+        self.agent_lease_deadline = None
+        with self.cond:
+            key = self.session
+            self._forget_session()  # forget first: never wait on a long bw call to lock
         if key:
             def tell_cli() -> None:
                 try:
@@ -2919,10 +2929,36 @@ class Broker:
             self.last_request = _now()
         if op in ("login.start", "login.continue", "login.apikey_slots", "sync", "lock", "prompt.answer"):
             self._status_cache = None
+        keep_open = req.get("keep_open")  # None = leave the caller's session as it is
+        # Ops that never hold or hand out a secret: no vault window, no lease.
+        no_lease = ("unlock", "login.start", "login.continue", "login.apikey_slots", "lock", "logout",
+                    "ping", "state", "status")
         try:
-            return {"ok": True, **(fn(req) or {})}
+            res = fn(req) or {}
+            ret = {"ok": True, **res}
+            if keep_open is not None and op not in no_lease and self.session:
+                if keep_open is False:
+                    # Close right now: no window at all.
+                    self.op_lock({})
+                    ret["_warden_session"] = {"status": "locked", "closed_automatically": True}
+                else:
+                    # A bounded window: the janitor closes the vault if the agent walks away.
+                    self.last_used = _now()
+                    self.agent_lease_deadline = _now() + self.agent_lease_s
+                    ret["_warden_session"] = {
+                        "status": "unlocked",
+                        "lease_remaining_s": int(self.agent_lease_s),
+                        "instruction": "Temporary window: finish with warden_session(action='lock') "
+                                       "when the flow is done; the vault closes on its own when the lease expires.",
+                    }
+                self._status_cache = None
+            return ret
         except WardenError as exc:
-            return {"ok": False, "error": str(exc), "code": exc.code, **exc.extra}
+            ret = {"ok": False, "error": str(exc), "code": exc.code, **exc.extra}
+            if keep_open is False and self.session and op not in no_lease:
+                self.op_lock({})
+                ret["_warden_session"] = {"status": "locked", "closed_automatically": True}
+            return ret
         except bwcli.BwNotInstalled:
             return {"ok": False, "error": "Bitwarden CLI (bw) is not installed", "code": "not_installed"}
         except (ValueError, TypeError) as exc:

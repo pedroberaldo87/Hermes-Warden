@@ -1732,7 +1732,10 @@ function ItemRow({ item, clearAfter }) {
     setBusy(field)
     try {
       const res = await post('/reveal', { item: item.id, field })
-      if (res && res.ok && typeof res.value === 'string') await copySecret(res.value, `${item.name}: ${label}`, res.clear_after ?? clearAfter)
+      if (res && res.ok && typeof res.value === 'string') {
+        await copySecret(res.value, `${item.name}: ${label}`, res.clear_after ?? clearAfter)
+        post('/session/lock')
+      }
       else toast('error', (res && res.error) || t('err'))
     } finally {
       setBusy(null)
@@ -1885,7 +1888,7 @@ function GeneratorCard({ st }) {
                   children: shown ? value : '•'.repeat(Math.min(32, value.length))
                 }),
                 jsx(Button, { size: 'xs', variant: 'ghost', onClick: () => setShown(s => !s), children: shown ? t('hide') : t('reveal') }),
-                jsx(Button, { size: 'xs', onClick: () => copySecret(value, t('password'), (st.session && st.session.clipboard_clear_seconds) ?? 30), children: t('copy') })
+                jsx(Button, { size: 'xs', onClick: () => { copySecret(value, t('password'), (st.session && st.session.clipboard_clear_seconds) ?? 30); post('/session/lock') }, children: t('copy') })
               ]
             })
           : null

@@ -279,6 +279,12 @@ No terminal, no setup guide: a tab with a button for each step.<br>Then ask for 
 | `warden_transfer` | export, import, receive a Send |
 | `warden_serve` | Status or stop of the local REST API (only you start it, from the tab) |
 
+**When the vault closes itself**
+
+- The agent's tools take `keep_open` (default `false`): each call that touches the vault locks it right after the operation, so no window is left behind. Pass `keep_open: true` only for a run of follow-up calls in the same flow; that opens a 90-second lease, the response carries `_warden_session` with the seconds left, and the vault closes on its own if the flow is abandoned. `warden_session action=lock` ends the lease at once.
+- In the tab, copying a secret (password, username, URL, card, note field) locks the vault immediately after the copy, and the clipboard clears on its own timer. No extra window while you are away from the keyboard.
+- The inactivity auto-lock (15 minutes by default) still applies to whatever is left open by a login you started from the tab.
+
 **What asks you first**
 
 - Every delivery of a secret to your clipboard or screen. Plain usernames and URLs of logins unchanged for a week go without one; otherwise the dialog shows the value.

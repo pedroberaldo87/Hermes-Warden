@@ -476,6 +476,8 @@ BW_SCHEMA = {
             "json": {"description": "Object for create/edit/move/send create; placeholders allowed in secret fields."},
             "reason": {"type": "string", "description": "Shown to the user if a confirmation is needed."},
             "timeout": {"type": "number", "default": 180, "maximum": 600},
+            "keep_open": {"type": "boolean", "default": True,
+                          "description": "Leave the vault unlocked for the next tool call in this turn. Pass false to lock right after execution."},
         },
         "required": ["args"],
         "additionalProperties": False,
@@ -488,7 +490,8 @@ def h_bw(args: dict, **_: Any) -> str:
     if not argv:
         return _err("args required", "invalid")
     params: dict[str, Any] = {"args": argv, "timeout": min(600.0, float(args.get("timeout") or 180)),
-                              "reason": str(args.get("reason") or "")}
+                              "reason": str(args.get("reason") or ""),
+                              "keep_open": bool(args.get("keep_open", True))}
     if args.get("json") is not None:
         payload = args["json"]
         if isinstance(payload, str):
@@ -522,6 +525,8 @@ EDIT_SCHEMA = {
             "append_uris": {"type": "array", "items": {"type": "object"}},
             "organization_id": {"type": "string"},
             "reason": {"type": "string"},
+            "keep_open": {"type": "boolean", "default": True,
+                          "description": "Leave the vault unlocked for the next tool call in this turn. Pass false to lock right after execution."},
         },
         "required": ["id"],
         "additionalProperties": False,
@@ -532,7 +537,8 @@ EDIT_SCHEMA = {
 def h_edit(args: dict, **_: Any) -> str:
     return _j(_hint(_call("edit", object=args.get("object") or "item", id=args.get("id"),
                           patch=args.get("patch") or {}, append_uris=args.get("append_uris"),
-                          organization_id=args.get("organization_id"), reason=str(args.get("reason") or ""))))
+                          organization_id=args.get("organization_id"), reason=str(args.get("reason") or ""),
+                          keep_open=bool(args.get("keep_open", True)))))
 
 
 # --------------------------------------------------------------------------- warden_secret
@@ -565,6 +571,8 @@ SECRET_SCHEMA = {
             "options": {"type": "object", "description": (
                 "generate: {length, uppercase, lowercase, number, special, min_number, min_special, "
                 "avoid_ambiguous} or {passphrase: true, words, separator, capitalize, include_number}.")},
+            "keep_open": {"type": "boolean", "default": True,
+                          "description": "Leave the vault unlocked for the next tool call in this turn. Pass false to lock right after execution."},
         },
         "required": ["action"],
         "additionalProperties": False,

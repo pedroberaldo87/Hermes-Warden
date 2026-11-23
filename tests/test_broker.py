@@ -25,11 +25,15 @@ def unlock(b):
 
 def test_starts_locked_and_unlocks(broker):
     st = broker.call("status")
+    print("Initial status:", st)
     assert st["ok"] and st["status"] == "locked" and st["broker"]["unlocked"] is False
     bad = broker.call("unlock", password="wrong")
+    print("Bad unlock:", bad)
     assert not bad["ok"] and bad["code"] == "bad_password"
-    unlock(broker)
+    unlock_res = unlock(broker)
+    print("Unlock:", unlock_res)
     st = broker.call("status")
+    print("After unlock:", st)
     assert st["status"] == "unlocked" and st["broker"]["unlocked"] is True
     assert "S" * 44 not in json.dumps(st)
 
@@ -339,3 +343,20 @@ def test_concurrent_calls_serialize(broker):
     for t in threads:
         t.join(30)
     assert len(results) == 8 and all(r["ok"] for r in results), [r for r in results if not r["ok"]][:2]
+
+
+def test_keep_open_false_locks_vault_and_returns_envelope(broker):
+    unlock(broker)
+    assert broker.call("status")["status"] == "unlocked"
+    res = broker.call("exec", args=["list", "items"], keep_open=False)
+    assert res["ok"]
+    assert res.get("_warden_session") == {"status": "locked", "closed_automatically": True}
+    st = broker.call("status")
+    assert st["status"] == "locked" and st["broker"]["unlocked"] is False
+
+
+def test_default_keeps_unlocked_for_follow_up_call(broker):
+    unlock(broker)
+    res = broker.call("exec", args=["list", "items"])
+    assert res["ok"] and "_warden_session" not in res
+    assert broker.call("status")["status"] == "unlocked"
