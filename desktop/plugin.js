@@ -1274,7 +1274,7 @@ function RevealDialog({ ticket, onClose }) {
         jsxs(DialogFooter, {
           children: [
             jsx(Button, { variant: 'ghost', onClick: () => setShown(s => !s), children: shown ? t('hide') : t('reveal') }),
-            jsx(Button, { onClick: () => copySecret(value, ticket.label, ticket.clear_after), children: t('copy') }),
+            jsx(Button, { onClick: () => copySecret(value, ticket.label, ticket.clear_after).finally(() => post('/session/lock').catch(() => {})), children: t('copy') }),
             jsx(Button, { variant: 'secondary', onClick: onClose, children: t('done') })
           ]
         })
@@ -1358,6 +1358,7 @@ function DialogHost() {
           setReveal({ ...res, id: tk.id })
         } else {
           copySecret(res.value, res.label, res.clear_after).then(okCopy => {
+            post('/session/lock').catch(() => {})
             if (!okCopy) setReveal({ ...res, id: tk.id })
           })
         }
