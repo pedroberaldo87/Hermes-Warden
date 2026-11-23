@@ -279,6 +279,12 @@ Sem terminal e sem tutorial: uma aba com um botão para cada passo.<br>Depois é
 | `warden_transfer` | export, import, receive de um Send |
 | `warden_serve` | Estado ou parada da API REST local (só você liga, pela aba) |
 
+**Quando o cofre se tranca sozinho**
+
+- As ferramentas do agente aceitam `keep_open` (padrão `true`): cada chamada que toca o cofre o deixa aberto para a próxima do mesmo fluxo, com uma janela de 90 segundos. A resposta traz `_warden_session` com os segundos restantes e o lembrete de encerrar com `warden_session action=lock`; o vigia tranca o cofre sozinho se o fluxo for abandonado. Passe `keep_open: false` para trancar logo após a chamada; um segredo gerado ou digitado (um espaço) mantém a janela porque a próxima chamada o consome.
+- Na aba, copiar um segredo (senha, usuário, URL, cartão, campo de nota) tranca o cofre imediatamente após a cópia, e a área de transferência se limpa no prazo dela. Nenhuma janela extra enquanto você está longe do teclado.
+- O trancamento por inatividade (15 minutos por padrão) continua valendo para o que ficou aberto por um login que você iniciou na aba, e o vigia nunca tranca no meio de uma chamada em andamento.
+
 **O que pede confirmação**
 
 - Toda entrega de segredo para a sua área de transferência ou tela. Usuário e URL simples de logins sem mudança há uma semana vão sem diálogo; nos outros casos o diálogo mostra o valor.
