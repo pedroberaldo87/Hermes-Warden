@@ -74,6 +74,9 @@ def test_secrets_refused_over_remote_plain_http(broker):
     broker.call("unlock", password=PASSWORD)
     assert j(remote.post(f"{P}/reveal", json={"item": "GitHub"}), 403)["code"] == "insecure"
     assert j(remote.post(f"{P}/generate", json={}), 403)["code"] == "insecure"
+    assert j(remote.post(f"{P}/install"), 403)["code"] == "insecure"
+    assert j(remote.post(f"{P}/server", json={"url": "https://vault.bitwarden.com"}), 403)["code"] == "insecure"
+    assert j(remote.post(f"{P}/serve/start", json={}), 403)["code"] == "insecure"
     via_https = remote.post(f"{P}/reveal", json={"item": "GitHub"}, headers={"x-forwarded-proto": "https"})
     assert j(via_https)["value"] == "s3cr3t-P@ss"
 
