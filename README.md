@@ -15,7 +15,7 @@ No terminal, no setup guide: a tab with a button for each step.<br>Then ask for 
 ![Hermes Agent ≥ 0.22.6](https://img.shields.io/badge/Hermes%20Agent-%E2%89%A5%200.22.6-blueviolet?style=for-the-badge)
 ![Bitwarden CLI 2026.10.1](https://img.shields.io/badge/Bitwarden%20CLI-2026.10.1-175DDC?style=for-the-badge&logo=bitwarden&logoColor=white)
 
-[Features](#features) · [Installation](#installation) · [Usage](#usage) · [Privacy](#privacy-and-disclosure) · [How it works](#how-it-works)
+[Features](#features) · [Installation](#installation) · [Usage](#usage) · [Privacy](#privacy-and-disclosure) · [How it works](#how-it-works) · [Architecture](docs/architecture.md)
 
 **If Hermes Warden is useful to you, a star on this repository helps other people find it.**
 
