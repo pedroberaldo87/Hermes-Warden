@@ -15,6 +15,9 @@ the conversation. You see metadata (names, usernames, URIs, folders, ids). Passw
 codes, notes, card numbers, keys and the master password stay inside the Warden and reach
 the user through a masked dialog, their clipboard, or straight into the command that needs them.
 
+The output of a command you approve is redacted best effort: a command that transforms a
+value another way can still return it. The approval dialog is the real control.
+
 ## Rules
 
 1. Never run `bw` in the terminal, never ask the user to paste a password, code or session

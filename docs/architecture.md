@@ -117,7 +117,7 @@ The plugin does not write to the user's Vault, to `~/.ssh`, to shell profiles or
 
 ## Deliberate differences
 
-- `warden_run` injects the approved secrets into a command the person approves. The output redaction replaces the exact values; a command that transforms a value can still return it. The approval dialog is the gate.
+- `warden_run` injects the approved secrets into a command the person approves. The output redaction replaces the exact value and common encodings (base64, hex, URL, reversed); a command that transforms a value another way can still return it. The approval dialog is the gate.
 - The tab and the tools confirm consequential actions with a host dialog, not with the `pre_tool_call` approve directive. The `pre_tool_call` hook is used as a guard, not as the approval mechanism.
 - Settings live in the plugin's own `settings.json`, not in the manifest's `config_schema`, because the tab reads and writes them live.
 - The `keep_open: false` path is covered by unit tests. The end-to-end run with a live dialog was not repeated after the first timeout; the behaviour is the broker's immediate lock path.
