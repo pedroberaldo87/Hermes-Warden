@@ -1,7 +1,7 @@
 ---
 name: bitwarden
 description: Use when the user asks anything about Bitwarden or a password. Warden tools only.
-version: 0.1.5
+version: 0.1.6
 metadata:
   hermes:
     tags: [bitwarden, passwords, vault, secrets, security]
@@ -10,8 +10,8 @@ metadata:
 
 # Bitwarden via Hermes Warden
 
-Hermes Warden drives the Bitwarden CLI (`bw`) for you. Its one rule: no secret ever enters
-the conversation. You see metadata (names, usernames, URIs, folders, ids). Passwords, TOTP
+Hermes Warden drives the Bitwarden CLI (`bw`) for you. Its one rule: no secret enters
+the conversation from the vault. You see metadata (names, usernames, URIs, folders, ids). Passwords, TOTP
 codes, notes, card numbers, keys and the master password stay inside the Warden and reach
 the user through a masked dialog, their clipboard, or straight into the command that needs them.
 

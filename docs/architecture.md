@@ -2,7 +2,7 @@
 
 How Hermes Warden is built, where the vault lives, and what the agent can and cannot do.
 
-This document describes the 0.1.5 release (`3cae28d`). It was added to the repository after that release commit and does not change the release pin used by the plugin catalogue.
+This document is part of the 0.1.6 release (the commit pinned in the catalogue entry), a documentation-only release. The code is the 0.1.5 code; no behavior changed.
 
 ## What this plugin is, and what it is not
 
@@ -103,14 +103,14 @@ The plugin does not write to the user's Vault, to `~/.ssh`, to shell profiles or
 - **Server mismatch:** the tab shows the configured server and the login state. A wrong server is a login error, not a silent fallback.
 - **No local REST API:** `warden_serve` is off by default. Starting it is a person's action.
 
-## Verification performed for 0.1.5
+## Verification performed for 0.1.6
 
 - `hermes plugins validate`: manifest, capabilities, security scan, SDK use and no core override.
 - `hermes plugins doctor`: standalone plugin, 9 tools, 1 hook.
 - Full test suite: 259 passed on macOS.
 - Floor `v0.22.6`: 258 passed, 1 skipped.
 - Catalogue CI replay: 46 catalog test files, 881 tests, `RESULT=0`.
-- Fresh install by catalogue name and update from 0.1.4 to 0.1.5, with settings and Bitwarden data preserved.
+- Fresh install at the 0.1.6 pin and update from 0.1.5 to 0.1.6, with settings and Bitwarden data preserved.
 - Tab API without a gateway ticket: `401 Unauthorized`.
 - `/install`, `/server` and `/serve` from a remote plain HTTP origin: `403`.
 - End-to-end with a real vault: unlock, `keep_open: true` returned a 90 second lease, the status reported the remaining lease, and the vault was locked after the lease expired.
@@ -125,7 +125,7 @@ The plugin does not write to the user's Vault, to `~/.ssh`, to shell profiles or
 
 ## Release and catalogue
 
-- Release 0.1.5: `3cae28d31009d5af37c2fa8e873d1805d9d80598`.
+- Release 0.1.6: the commit pinned in the catalogue entry.
 - Catalogue entry: `plugin-catalog/hermes-warden.yaml` in `NousResearch/hermes-agent`, with the same sha and version.
 - The catalogue PR is data-only: one YAML file, the sha, the version, the description and the screenshots.
 
