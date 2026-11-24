@@ -127,7 +127,7 @@ The plugin does not write to the user's Vault, to `~/.ssh`, to shell profiles or
 
 - Release 0.1.5: `3cae28d31009d5af37c2fa8e873d1805d9d80598`.
 - Catalogue entry: `plugin-catalog/hermes-warden.yaml` in `NousResearch/hermes-agent`, with the same sha and version.
-- The catalogue PR is data-only: one YAML file, the sha, the version and the screenshots.
+- The catalogue PR is data-only: one YAML file, the sha, the version, the description and the screenshots.
 
 ## Reading the code
 
