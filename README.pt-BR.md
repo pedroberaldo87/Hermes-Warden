@@ -6,7 +6,7 @@
 
 Sem terminal e sem tutorial: uma aba com um botão para cada passo.<br>Depois é só pedir uma senha em qualquer chat, até no Telegram.
 
-**O agente trabalha com o seu cofre e nunca vê um segredo.**
+**O agente trabalha com o seu cofre e nunca lê um segredo dele.**
 
 [English](README.md) · **Português**
 
@@ -56,7 +56,7 @@ Sem terminal e sem tutorial: uma aba com um botão para cada passo.<br>Depois é
 </tr></tbody>
 </table>
 
-**O agente vê nomes, usuários e URLs. Nunca os segredos.**
+**O agente vê nomes, usuários e URLs, não os segredos do cofre.**
 
 ![A aba Warden no Hermes Desktop com dados de exemplo: os passos de configuração concluídos (Bitwarden CLI instalado, servidor, login, cofre destrancado) e a lista do cofre embaixo, com botões User e Password em cada login](docs/screenshots/hero.png)
 

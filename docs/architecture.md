@@ -17,7 +17,7 @@ The plugin adds four surfaces on top of `bw`:
 - a `/warden` command;
 - a local broker that keeps the unlocked session in memory and answers the tab and the tools.
 
-The agent works with item names, usernames, URLs and metadata. It never receives the secret values. Those are typed by the person in a masked host dialog and copied by the person from the tab.
+The agent works with item names, usernames, URLs and metadata. The tools return metadata, not values; values are typed by the person in a masked host dialog and copied by the person from the tab. The exception is `warden_run`, which injects the secrets you approve into a command's environment and redacts them from the output, best effort.
 
 ## Components
 
@@ -54,8 +54,8 @@ Default values:
 
 ## Security model
 
-- **Secrets never enter the conversation.** The master password and item secrets are typed in masked host dialogs. The agent receives item metadata, never values. The tab copies values directly to the clipboard.
-- **The session key lives in memory.** No session key in `settings.json`, in the plugin data, in a log or in the environment of a child process.
+- **The vault does not put secrets in the conversation.** The master password and item values are typed in masked host dialogs. The agent receives metadata, not values. The tab copies values directly to the clipboard. `warden_run` is the deliberate exception: it injects the approved secrets into a command and redacts the output, best effort.
+- **The session key lives in memory.** It is not in `settings.json`, in the plugin data, in a log or in the conversation. The `bw` child receives it as `BW_SESSION` for the duration of a call; no other child gets it.
 - **The clipboard is cleared.** After a copy, the tab clears the clipboard after the configured interval.
 - **Child processes get a minimal environment.** `host_env()` passes PATH, HOME and locale, not the full Hermes environment.
 - **Paths are confined.** `safe_output` resolves the path, keeps it under the user's home, refuses `Library`, `Applications`, hidden directories, executable files and overwrites. Exports and attachments only go where the user approves.
@@ -74,7 +74,7 @@ Default values:
 | `warden_bw` | Runs an allowlisted `bw` command, with confirmation for consequential ones. |
 | `warden_edit` | Creates or edits an item through a guided flow. |
 | `warden_secret` | Asks the person for a secret in a masked dialog and saves it, or delivers it to the clipboard. |
-| `warden_run` | Runs a command with the vault unlocked and closes it at the end. |
+| `warden_run` | Runs a command with the approved secrets injected as environment variables, redacts the output best effort, and locks at the end. |
 | `warden_transfer` | Exports, imports or receives a Bitwarden Send. |
 | `warden_serve` | Starts and stops the local Bitwarden REST API on `127.0.0.1`. |
 
@@ -117,9 +117,10 @@ The plugin does not write to the user's Vault, to `~/.ssh`, to shell profiles or
 
 ## Deliberate differences
 
+- `warden_run` injects the approved secrets into a command the person approves. The output redaction replaces the exact values; a command that transforms a value can still return it. The approval dialog is the gate.
 - The tab and the tools confirm consequential actions with a host dialog, not with the `pre_tool_call` approve directive. The `pre_tool_call` hook is used as a guard, not as the approval mechanism.
 - Settings live in the plugin's own `settings.json`, not in the manifest's `config_schema`, because the tab reads and writes them live.
-- The `keep_open: false` path is covered by unit tests. The end-to-end run with a live dialog was not repeated after the first timeout; the behaviour is the same lock call the other paths use.
+- The `keep_open: false` path is covered by unit tests. The end-to-end run with a live dialog was not repeated after the first timeout; the behaviour is the broker's immediate lock path.
 - The local REST API started by `warden_serve` is unauthenticated on `127.0.0.1` by design, like `bw serve`. The tab route that starts it is guarded.
 
 ## Release and catalogue

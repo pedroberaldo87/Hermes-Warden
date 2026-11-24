@@ -6,7 +6,7 @@
 
 No terminal, no setup guide: a tab with a button for each step.<br>Then ask for a password from any chat, Telegram included.
 
-**The agent works with your vault and never sees a secret.**
+**The agent works with your vault and never reads a secret from it.**
 
 **English** · [Português](README.pt-BR.md)
 
@@ -56,7 +56,7 @@ No terminal, no setup guide: a tab with a button for each step.<br>Then ask for 
 </tr></tbody>
 </table>
 
-**The agent sees names, usernames and URLs. Never the secrets.**
+**The agent sees names, usernames and URLs, not the secrets in the vault.**
 
 ![The Warden tab in Hermes Desktop with sample data: the setup steps all done (Bitwarden CLI installed, server, logged in, vault unlocked) and the vault list below with User and Password copy buttons on each login](docs/screenshots/hero.png)
 
