@@ -2,7 +2,7 @@
 
 How Hermes Warden is built, where the vault lives, and what the agent can and cannot do.
 
-This document is part of the 0.1.7 release (the commit pinned in the catalogue entry), a documentation and version-metadata release. The code is the 0.1.5 code; no behavior changed.
+This document is part of the 0.1.7 release (the commit pinned in the catalogue entry), a documentation and version-metadata release. The behavior is the 0.1.5 behavior; the only code changes are the version constants. No behavior changed.
 
 ## What this plugin is, and what it is not
 
