@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.7 (2026-11-27)
+
+Documentation and version metadata only. No behavior change.
+
+- Adds this changelog, a version badge and a Changelog link to both READMEs.
+- Bumps the version in `plugin.yaml`, `hermes_warden/__init__.py`, `dashboard/manifest.json` and the Bitwarden skill.
+- The catalogue entry pins 0.1.7.
+
 ## 0.1.6 (2026-11-24)
 
 Documentation only. No code or behavior change.
@@ -10,10 +18,14 @@ Documentation only. No code or behavior change.
 
 ## 0.1.5 (2026-11-23)
 
-- The vault closes after each agent tool call. `keep_open: true` (default) grants a 90-second lease and returns `_warden_session`; `false` locks immediately.
+| Before | After |
+| --- | --- |
+| A tool call left the vault unlocked | The vault closes after each call; `keep_open: true` (default) grants a 90 s lease, `false` locks immediately |
+| `prompt.wait` could hold the vault open | It no longer pauses the janitor |
+| A copy in the tab could leave the vault open | Every copy locks; a failed lock is retried once and shown |
+| `bw update` was callable by the model | Removed; the pinned installer is the only update path |
+| `/install`, `/server` and `/serve` did not call `_secure()` | They require loopback or HTTPS; each has a 403 test |
+
 - The janitor never locks in the middle of a vault-using operation; `prompt.wait` does not hold the vault open.
-- Every copy in the tab locks the vault; a failed lock is retried once and shown.
-- `bw update` was removed from the allowlist. The installer is the only path; the direct download checks the published SHA-256.
 - `getconf`, `osascript` and `ps` get a minimal environment.
-- `/install`, `/server` and `/serve` require loopback or HTTPS.
 - An immediate lock keeps the locked status cache.

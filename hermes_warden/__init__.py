@@ -10,7 +10,7 @@ Modules:
 - ``tools``    agent tool schemas and handlers.
 """
 
-VERSION = "0.1.5"
+VERSION = "0.1.7"
 PLUGIN_ID = "hermes-warden"
 
 

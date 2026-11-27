@@ -12,7 +12,7 @@ No terminal, no setup guide: a tab with a button for each step.<br>Then ask for 
 
 [![GitHub stars](https://img.shields.io/github/stars/pedroberaldo87/Hermes-Warden?style=for-the-badge&logo=github)](https://github.com/pedroberaldo87/Hermes-Warden/stargazers)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg?style=for-the-badge)](LICENSE)
-![Hermes Warden 0.1.6](https://img.shields.io/badge/Hermes%20Warden-0.1.6-2F6FEB?style=for-the-badge)
+![Hermes Warden 0.1.7](https://img.shields.io/badge/Hermes%20Warden-0.1.7-2F6FEB?style=for-the-badge)
 ![Hermes Agent ≥ 0.22.6](https://img.shields.io/badge/Hermes%20Agent-%E2%89%A5%200.22.6-blueviolet?style=for-the-badge)
 ![Bitwarden CLI 2026.10.1](https://img.shields.io/badge/Bitwarden%20CLI-2026.10.1-175DDC?style=for-the-badge&logo=bitwarden&logoColor=white)
 

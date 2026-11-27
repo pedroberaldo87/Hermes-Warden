@@ -1,7 +1,7 @@
 ---
 name: bitwarden
 description: Use when the user asks anything about Bitwarden or a password. Warden tools only.
-version: 0.1.6
+version: 0.1.7
 metadata:
   hermes:
     tags: [bitwarden, passwords, vault, secrets, security]
